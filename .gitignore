@@ -216,3 +216,14 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Local app/runtime files
+*.sqlite
+*.sqlite3
+*.db
+*.db-journal
+
+# Uploads / generated local files
+uploads/
+media/
+staticfiles/
