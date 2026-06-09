@@ -12,6 +12,7 @@ from app.core.security import (
     REFRESH_TOKEN_TYPE,
     create_access_token,
     create_refresh_token,
+    decode_token,
     hash_password,
     verify_password,
 )
@@ -32,7 +33,7 @@ def _access_expires_in() -> int:
     return settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60
 
 
-async def _issue_tokens(db: AsyncSession, user: User) -> TokenResponse:
+def _issue_tokens(db: AsyncSession, user: User) -> TokenResponse:
     """access + refresh 발급. refresh의 jti를 DB에 저장(D8)."""
     jti = uuid.uuid4().hex
     refresh_token = create_refresh_token(user.id, jti)
@@ -68,7 +69,7 @@ async def signup(db: AsyncSession, request: SignupRequest) -> TokenResponse:
         await db.rollback()
         raise AppError(error_codes.CONFLICT, "이미 가입된 이메일입니다.", 409) from exc
 
-    tokens = await _issue_tokens(db, user)
+    tokens = _issue_tokens(db, user)
     await db.commit()
     return tokens
 
@@ -78,18 +79,14 @@ async def login(db: AsyncSession, request: LoginRequest) -> TokenResponse:
     if user is None or not verify_password(request.password, user.password_hash):
         raise AppError(error_codes.UNAUTHORIZED, "이메일 또는 비밀번호가 올바르지 않습니다.", 401)
 
-    tokens = await _issue_tokens(db, user)
+    tokens = _issue_tokens(db, user)
     await db.commit()
     return tokens
 
 
 async def refresh(db: AsyncSession, request: RefreshRequest) -> AccessTokenResponse:
     try:
-        payload = jwt.decode(
-            request.refresh_token,
-            settings.SECRET_KEY,
-            algorithms=["HS256"],
-        )
+        payload = decode_token(request.refresh_token)
     except jwt.ExpiredSignatureError as exc:
         raise AppError(error_codes.TOKEN_EXPIRED, "리프레시 토큰이 만료되었습니다.", 401) from exc
     except jwt.InvalidTokenError as exc:
@@ -112,12 +109,7 @@ async def refresh(db: AsyncSession, request: RefreshRequest) -> AccessTokenRespo
 async def logout(db: AsyncSession, request: LogoutRequest) -> None:
     """refresh 토큰 무효화. 멱등 — 토큰이 무효/없어도 204."""
     try:
-        payload = jwt.decode(
-            request.refresh_token,
-            settings.SECRET_KEY,
-            algorithms=["HS256"],
-            options={"verify_exp": False},
-        )
+        payload = decode_token(request.refresh_token, verify_exp=False)
     except jwt.InvalidTokenError:
         return
 

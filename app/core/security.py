@@ -49,7 +49,13 @@ def create_refresh_token(user_id: int, jti: str) -> str:
     return _create_token(str(user_id), REFRESH_TOKEN_TYPE, expires_delta, jti=jti)
 
 
-def decode_token(token: str) -> dict[str, Any]:
+def decode_token(token: str, *, verify_exp: bool = True) -> dict[str, Any]:
     """토큰 검증·디코드. 만료는 jwt.ExpiredSignatureError, 그 외 무효는
-    jwt.InvalidTokenError로 전파 — 호출측(인증 의존성)이 에러코드로 매핑."""
-    return jwt.decode(token, settings.SECRET_KEY, algorithms=[_ALGORITHM])
+    jwt.InvalidTokenError로 전파 — 호출측(인증 의존성)이 에러코드로 매핑.
+    verify_exp=False면 만료된 토큰도 디코드 — 로그아웃 멱등 처리용."""
+    return jwt.decode(
+        token,
+        settings.SECRET_KEY,
+        algorithms=[_ALGORITHM],
+        options={"verify_exp": verify_exp},
+    )
