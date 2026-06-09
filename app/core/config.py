@@ -7,6 +7,10 @@ class Settings(BaseSettings):
     # api-spec Base URL: https://api.sagestock.app/v1 → 프리픽스는 /v1
     API_V1_PREFIX: str = "/v1"
 
+    # 공개 루트 호스트(스킴+호스트, /v1 미포함). 환경별로 달라 env로 둔다.
+    # OpenAPI servers에 사용 → Swagger가 환경별 올바른 호스트를 가리킨다.
+    PUBLIC_BASE_URL: str = "http://localhost:8000"
+
     # 환경 의존 값 (.env). DB 미연결이어도 앱은 부팅됨(엔진은 lazy).
     DATABASE_URL: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/sagestock"
     SECRET_KEY: str = "change-me-in-env-with-a-long-random-secret-key"
