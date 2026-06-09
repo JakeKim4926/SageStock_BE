@@ -21,14 +21,21 @@ def verify_password(password: str, hashed_password: str) -> bool:
     return _pwd_context.verify(password, hashed_password)
 
 
-def _create_token(subject: str, token_type: str, expires_delta: timedelta) -> str:
+def _create_token(
+    subject: str,
+    token_type: str,
+    expires_delta: timedelta,
+    jti: str | None = None,
+) -> str:
     now = datetime.now(UTC)
-    payload = {
+    payload: dict[str, Any] = {
         "sub": subject,
         "type": token_type,
         "iat": now,
         "exp": now + expires_delta,
     }
+    if jti is not None:
+        payload["jti"] = jti
     return jwt.encode(payload, settings.SECRET_KEY, algorithm=_ALGORITHM)
 
 
@@ -37,9 +44,9 @@ def create_access_token(user_id: int) -> str:
     return _create_token(str(user_id), ACCESS_TOKEN_TYPE, expires_delta)
 
 
-def create_refresh_token(user_id: int) -> str:
+def create_refresh_token(user_id: int, jti: str) -> str:
     expires_delta = timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
-    return _create_token(str(user_id), REFRESH_TOKEN_TYPE, expires_delta)
+    return _create_token(str(user_id), REFRESH_TOKEN_TYPE, expires_delta, jti=jti)
 
 
 def decode_token(token: str) -> dict[str, Any]:

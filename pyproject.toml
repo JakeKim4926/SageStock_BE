@@ -11,6 +11,7 @@ dependencies = [
     "asyncpg>=0.30",
     "alembic>=1.14",
     "pydantic-settings>=2.6",
+    "email-validator>=2.2",
     "pyjwt>=2.10",
     "passlib[bcrypt]>=1.7.4",
     # passlib 1.7.4 는 bcrypt 4.1+ 에서 self-test 크래시 → 호환 버전으로 핀.
@@ -22,6 +23,7 @@ dependencies = [
 dev = [
     "pytest>=8.3",
     "pytest-asyncio>=0.24",
+    "aiosqlite>=0.20",
     "ruff>=0.8",
     "mypy>=1.13",
 ]
