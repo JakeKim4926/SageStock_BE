@@ -6,7 +6,7 @@
 ## 열린 항목
 
 ### [2026-06-10] 임시구현 — 다이버전스 탐지 단순 3봉 피벗
-- 위치: app/indicators/signal_detector.py _pivots/_detect_divergences
+- 위치: app/services/signal_detector.py _pivots/_detect_divergences
 - 설명: 국소 저점/고점을 3봉 피벗으로만 잡아 직전 두 피벗을 비교. 완만한 스윙/노이즈에 취약해 정식 스윙 탐지 대비 오탐·누락 가능.
 - 위험도: 중
 - 후속: ATR/주기 기반 스윙 탐지 또는 피벗 강도 임계값 도입
@@ -51,4 +51,4 @@
 
 ### [2026-06-10] 임시구현 — IndicatorSet cross/divergence 마커 빈 배열 (B2에서 해결)
 - 위치: app/services/stock_service.py _build_indicator_set
-- 설명: B1에서 crossMarkers/divergenceMarkers를 빈 배열로 반환하던 것을, B2 시그널 탐지(app/indicators/signal_detector.py)와 계산 공유해 채움.
+- 설명: B1에서 crossMarkers/divergenceMarkers를 빈 배열로 반환하던 것을, B2 시그널 탐지(app/services/signal_detector.py)와 계산 공유해 채움.

@@ -1,7 +1,7 @@
 import pandas as pd
 
 from app.constants.enums import SignalType
-from app.indicators.signal_detector import detect_signals
+from app.services.signal_detector import detect_signals
 
 
 def _window(overrides: dict[str, list[float]]) -> pd.DataFrame:

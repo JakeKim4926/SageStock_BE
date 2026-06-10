@@ -8,8 +8,8 @@ from app.constants.signals import SIGNAL_DESCRIPTIONS, SIGNAL_RISK_LEVELS
 from app.data import market_source
 from app.dependencies.pagination_dependency import PageParams
 from app.indicators.chart import compute_window
-from app.indicators.signal_detector import DetectedSignal, detect_signals
 from app.schemas.signal_schema import SignalResponse
+from app.services.signal_detector import DetectedSignal, detect_signals
 
 
 async def get_signals(

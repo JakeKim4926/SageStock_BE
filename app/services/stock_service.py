@@ -14,9 +14,9 @@ from app.core.exceptions import AppError
 from app.data import market_source
 from app.dependencies.pagination_dependency import PageParams
 from app.indicators.chart import compute_window
-from app.indicators.signal_detector import detect_signals
 from app.schemas.indicator_schema import CandleResponse, CrossMarkerResponse, IndicatorSetResponse
 from app.schemas.stock_schema import QuoteResponse, StockResponse
+from app.services.signal_detector import detect_signals
 
 
 async def search_stocks(
