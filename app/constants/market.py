@@ -1,0 +1,68 @@
+from dataclasses import dataclass
+from typing import Final
+
+from app.constants.enums import Market
+
+# api-spec §2 / feature-spec §4.2 시세·지표 관련 고정값(코드 레벨). 환경 의존 값 아님.
+
+# 차트 시리즈 반환 길이: 최근 N 거래일 (feature-spec §4.2, 기본값 조정 가능).
+CHART_SERIES_LENGTH: Final = 120
+# 지표 워밍업 확보용 과거 조회 일수(달력일). ema120 등 장기선이 반환 구간에서 안정화되도록 충분히 끌어온다.
+INDICATOR_LOOKBACK_DAYS: Final = 500
+# 유효 봉 최소 개수. 미만이면 422 INSUFFICIENT_DATA (feature-spec §4.2).
+MIN_VALID_BARS: Final = 60
+# quote 계산용 단기 조회 일수(전일 종가 대비 등락 산출).
+QUOTE_LOOKBACK_DAYS: Final = 10
+# 차트 EMA 기간 (api-spec IndicatorSet ema5/20/60/120).
+CHART_EMA_SPANS: Final = (5, 20, 60, 120)
+# 스냅샷 스파크라인 포인트 수.
+SPARKLINE_LENGTH: Final = 20
+# 스냅샷 조회 일수(달력일). 스파크라인 + 전일 종가 확보용.
+SNAPSHOT_LOOKBACK_DAYS: Final = 40
+
+# fdr 일봉은 지연 시세 → quote.isDelayed 기본 True (feature-spec §3).
+IS_DELAYED_DEFAULT: Final = True
+
+# 시세 캐시 TTL(초). 장중 quote/snapshot 평탄화 (feature-spec §2, 기본값 조정 가능).
+QUOTE_CACHE_TTL_SECONDS: Final = 60.0
+# 종목 리스팅 캐시 TTL(초). 일 1회 갱신 → 하루.
+LISTING_CACHE_TTL_SECONDS: Final = 60.0 * 60 * 24
+
+# /market/status 운영시간(현지시각, feature-spec §3, 기본값 조정 가능).
+# 휴장일 판정은 후속 과제(§10) — B1은 운영시간대만 판정한다.
+# KR: 정규장만(프리/애프터 없음). US: 프리/정규/애프터.
+@dataclass(frozen=True)
+class MarketHours:
+    tz: str
+    open: tuple[int, int]
+    close: tuple[int, int]
+    pre_open: tuple[int, int] | None = None
+    after_close: tuple[int, int] | None = None
+
+
+MARKET_HOURS: Final[dict[Market, MarketHours]] = {
+    Market.KR: MarketHours(tz="Asia/Seoul", open=(9, 0), close=(15, 30)),
+    Market.US: MarketHours(
+        tz="America/New_York",
+        pre_open=(4, 0),
+        open=(9, 30),
+        close=(16, 0),
+        after_close=(20, 0),
+    ),
+}
+
+# /market/snapshots 임시 시드 유니버스 (B1 한정).
+# 아키텍처상 스냅샷은 watchlist 기반이나 watchlist 도메인은 B3 → 그때 교체한다.
+# (ticker, name, market, exchange)
+SEED_UNIVERSE: Final[tuple[tuple[str, str, Market, str], ...]] = (
+    ("005930", "삼성전자", Market.KR, "KOSPI"),
+    ("000660", "SK하이닉스", Market.KR, "KOSPI"),
+    ("035420", "NAVER", Market.KR, "KOSPI"),
+    ("035720", "카카오", Market.KR, "KOSPI"),
+    ("005380", "현대차", Market.KR, "KOSPI"),
+    ("247540", "에코프로비엠", Market.KR, "KOSDAQ"),
+    ("AAPL", "Apple Inc.", Market.US, "NASDAQ"),
+    ("MSFT", "Microsoft Corporation", Market.US, "NASDAQ"),
+    ("NVDA", "NVIDIA Corporation", Market.US, "NASDAQ"),
+    ("TSLA", "Tesla, Inc.", Market.US, "NASDAQ"),
+)

@@ -17,6 +17,7 @@ dependencies = [
     # passlib 1.7.4 는 bcrypt 4.1+ 에서 self-test 크래시 → 호환 버전으로 핀.
     "bcrypt>=4.0,<4.1",
     "httpx>=0.28",
+    "finance-datareader>=0.9.202",
 ]
 
 [dependency-groups]
