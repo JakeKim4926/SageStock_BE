@@ -5,17 +5,23 @@
 
 ## 열린 항목
 
-### [2026-06-10] 임시구현 — /market/snapshots 유니버스 하드코딩 시드
-- 위치: app/constants/market.py SEED_UNIVERSE / app/services/market_service.py
-- 설명: 스냅샷은 관심종목(watchlist) 기반이어야 하나 watchlist 도메인이 B3라 고정 시드 10종목으로 채움. 사용자별 피드가 아님.
+### [2026-06-10] 임시구현 — 다이버전스 탐지 단순 3봉 피벗
+- 위치: app/indicators/signal_detector.py _pivots/_detect_divergences
+- 설명: 국소 저점/고점을 3봉 피벗으로만 잡아 직전 두 피벗을 비교. 완만한 스윙/노이즈에 취약해 정식 스윙 탐지 대비 오탐·누락 가능.
+- 위험도: 중
+- 후속: ATR/주기 기반 스윙 탐지 또는 피벗 강도 임계값 도입
+
+### [2026-06-10] 임시구현 — /signals 피드 최신성 컷오프 없음
+- 위치: app/services/signal_service.py get_signals
+- 설명: 120봉 윈도우 전체에서 탐지해 최대 ~6개월 전 시그널까지 포함. 최신순 정렬+페이지네이션으로 최근 것이 위로 오지만 total이 커지고 오래된 시그널이 노이즈가 될 수 있음.
+- 위험도: 낮음
+- 후속: 최근 N봉/일 컷오프 파라미터 도입 (api-spec 협의)
+
+### [2026-06-10] 임시구현 — 시세/시그널 피드 유니버스 하드코딩 시드
+- 위치: app/constants/market.py SEED_UNIVERSE / app/services/market_service.py / app/services/signal_service.py
+- 설명: /market/snapshots·/signals 모두 관심종목(watchlist) 기반이어야 하나 watchlist 도메인이 B3라 고정 시드 10종목으로 채움. 사용자별 피드가 아님.
 - 위험도: 중
 - 후속: B3 watchlist 연동 시 시드 → 사용자 watchlist 기반으로 교체
-
-### [2026-06-10] 임시구현 — IndicatorSet cross/divergence 마커 빈 배열
-- 위치: app/services/stock_service.py _build_indicator_set
-- 설명: crossMarkers/divergenceMarkers를 항상 빈 배열로 반환. 차트 마커 미표시.
-- 위험도: 낮음
-- 후속: B2 시그널 탐지(§4.3)에서 지표 시리즈와 계산 공유해 채움
 
 ### [2026-06-10] 임시구현 — 영(young) 종목 지표 워밍업 패딩
 - 위치: app/services/stock_service.py _series_to_list
@@ -42,3 +48,7 @@
 - 후속: [tool.mypy] ignore_missing_imports 또는 types-passlib/pandas-stubs 도입
 
 ## 해결됨
+
+### [2026-06-10] 임시구현 — IndicatorSet cross/divergence 마커 빈 배열 (B2에서 해결)
+- 위치: app/services/stock_service.py _build_indicator_set
+- 설명: B1에서 crossMarkers/divergenceMarkers를 빈 배열로 반환하던 것을, B2 시그널 탐지(app/indicators/signal_detector.py)와 계산 공유해 채움.
