@@ -3,9 +3,8 @@ import pandas as pd  # type: ignore[import-untyped]
 from fastapi.concurrency import run_in_threadpool
 
 from app.constants import error_codes
-from app.constants.enums import Market
+from app.constants.enums import CrossType, Market, SignalType
 from app.constants.market import (
-    CHART_SERIES_LENGTH,
     INDICATOR_LOOKBACK_DAYS,
     IS_DELAYED_DEFAULT,
     MIN_VALID_BARS,
@@ -14,9 +13,10 @@ from app.constants.market import (
 from app.core.exceptions import AppError
 from app.data import market_source
 from app.dependencies.pagination_dependency import PageParams
-from app.indicators.sage_stock import SageStock
-from app.schemas.indicator_schema import CandleResponse, IndicatorSetResponse
+from app.indicators.chart import compute_window
+from app.schemas.indicator_schema import CandleResponse, CrossMarkerResponse, IndicatorSetResponse
 from app.schemas.stock_schema import QuoteResponse, StockResponse
+from app.services.signal_detector import detect_signals
 
 
 async def search_stocks(
@@ -106,17 +106,7 @@ async def get_indicators(ticker: str) -> IndicatorSetResponse:
 
 
 def _build_indicator_set(ticker: str, df: pd.DataFrame) -> IndicatorSetResponse:
-    # 지표는 전체 이력 위에서 계산(워밍업 확보) 후 최근 구간만 반환 → candles 인덱스와 정렬.
-    engine = (
-        SageStock(df)
-        .Make_RSI()
-        .Make_Bollinger_Bands()
-        .Make_Stochastic()
-        .Make_Disparity_EMA()
-        .Make_Chart_Emas()
-    )
-    computed = engine.Get_DataFrame()
-    window = computed.tail(CHART_SERIES_LENGTH)
+    window = compute_window(df)
 
     candles = [
         CandleResponse(
@@ -133,6 +123,22 @@ def _build_indicator_set(ticker: str, df: pd.DataFrame) -> IndicatorSetResponse:
     rsi_series = _series_to_list(window["RSI"])
     rsi14 = rsi_series[-1] if rsi_series else 0.0
 
+    # cross/divergence 마커는 /signals와 같은 탐지 로직을 공유한다 (feature-spec §4.3).
+    signals = detect_signals(window)
+    cross_markers = [
+        CrossMarkerResponse(
+            index=signal.candle_index,
+            type=CrossType.GOLDEN if signal.type is SignalType.GOLDEN_CROSS else CrossType.DEAD,
+        )
+        for signal in signals
+        if signal.type in (SignalType.GOLDEN_CROSS, SignalType.DEAD_CROSS)
+    ]
+    divergence_markers = [
+        signal.candle_index
+        for signal in signals
+        if signal.type in (SignalType.BULLISH_DIVERGENCE, SignalType.BEARISH_DIVERGENCE)
+    ]
+
     return IndicatorSetResponse(
         ticker=ticker,
         rsi14=rsi14,
@@ -148,6 +154,8 @@ def _build_indicator_set(ticker: str, df: pd.DataFrame) -> IndicatorSetResponse:
         disparity_series=_series_to_list(window["Disparity_EMA20"]),
         stochastic_k=_series_to_list(window["Stoch_K"]),
         stochastic_d=_series_to_list(window["Stoch_D"]),
+        cross_markers=cross_markers,
+        divergence_markers=divergence_markers,
     )
 
 

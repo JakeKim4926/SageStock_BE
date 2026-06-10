@@ -21,7 +21,9 @@ async def test_get_indicators_aligns_series_with_candles(monkeypatch) -> None:
     assert len(result.rsi_series) == len(result.candles)
     # 와이어는 비널 List<Double> → NaN 없이 전부 유한값.
     assert all(value == value for value in result.ema120)
-    assert result.cross_markers == []
+    # B2: cross/divergence 마커가 채워지며, 인덱스는 candles 범위 안.
+    assert all(0 <= marker.index < len(result.candles) for marker in result.cross_markers)
+    assert all(0 <= index < len(result.candles) for index in result.divergence_markers)
 
 
 @pytest.mark.asyncio
