@@ -1,14 +1,15 @@
 import pytest
 from httpx import AsyncClient
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.constants.enums import Market
-from app.data import market_source
+from tests.conftest import seed_stock_meta
 
 _SIGNUP = {"email": "watch@example.com", "password": "s3cret-pw", "name": "관심"}
-_INDEX = {
-    "005930": market_source.StockMeta("005930", "삼성전자", Market.KR, "KOSPI"),
-    "AAPL": market_source.StockMeta("AAPL", "Apple Inc.", Market.US, "NASDAQ"),
-}
+_ROWS = [
+    ("005930", "삼성전자", Market.KR, "KOSPI"),
+    ("AAPL", "Apple Inc.", Market.US, "NASDAQ"),
+]
 
 
 async def _token(client: AsyncClient) -> str:
@@ -27,8 +28,8 @@ async def test_watchlist_requires_auth(client: AsyncClient) -> None:
 
 
 @pytest.mark.asyncio
-async def test_add_then_get_returns_stock(client: AsyncClient, monkeypatch) -> None:
-    monkeypatch.setattr(market_source, "get_listing_index", lambda: _INDEX)
+async def test_add_then_get_returns_stock(client: AsyncClient, session: AsyncSession) -> None:
+    await seed_stock_meta(session, _ROWS)
     token = await _token(client)
 
     put = await client.put("/v1/watchlist/005930", headers=_auth(token))
@@ -43,8 +44,8 @@ async def test_add_then_get_returns_stock(client: AsyncClient, monkeypatch) -> N
 
 
 @pytest.mark.asyncio
-async def test_put_is_idempotent(client: AsyncClient, monkeypatch) -> None:
-    monkeypatch.setattr(market_source, "get_listing_index", lambda: _INDEX)
+async def test_put_is_idempotent(client: AsyncClient, session: AsyncSession) -> None:
+    await seed_stock_meta(session, _ROWS)
     token = await _token(client)
 
     await client.put("/v1/watchlist/005930", headers=_auth(token))
@@ -56,8 +57,8 @@ async def test_put_is_idempotent(client: AsyncClient, monkeypatch) -> None:
 
 
 @pytest.mark.asyncio
-async def test_delete_removes_and_is_idempotent(client: AsyncClient, monkeypatch) -> None:
-    monkeypatch.setattr(market_source, "get_listing_index", lambda: _INDEX)
+async def test_delete_removes_and_is_idempotent(client: AsyncClient, session: AsyncSession) -> None:
+    await seed_stock_meta(session, _ROWS)
     token = await _token(client)
 
     await client.put("/v1/watchlist/005930", headers=_auth(token))

@@ -3,7 +3,8 @@
 from app.models.paper_account_model import PaperAccount
 from app.models.paper_trade_model import PaperTrade
 from app.models.refresh_token_model import RefreshToken
+from app.models.stock_meta_model import StockMeta
 from app.models.user_model import User
 from app.models.watchlist_model import Watchlist
 
-__all__ = ["PaperAccount", "PaperTrade", "RefreshToken", "User", "Watchlist"]
+__all__ = ["PaperAccount", "PaperTrade", "RefreshToken", "StockMeta", "User", "Watchlist"]

@@ -8,8 +8,21 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 from sqlalchemy.pool import StaticPool
 
 import app.models  # noqa: F401  테이블 등록
+from app.constants.enums import Market
 from app.core.database import Base, get_db
 from app.main import app
+from app.models.stock_meta_model import StockMeta
+
+
+async def seed_stock_meta(
+    session: AsyncSession,
+    rows: list[tuple[str, str, Market, str]],
+) -> None:
+    """테스트용 stock_meta 시드. rows = (ticker, name, market, exchange)."""
+    session.add_all(
+        [StockMeta(ticker=t, name=n, market=m.value, exchange=e) for t, n, m, e in rows]
+    )
+    await session.commit()
 
 
 def make_ohlcv(rows: int, start_price: float = 100.0) -> pd.DataFrame:

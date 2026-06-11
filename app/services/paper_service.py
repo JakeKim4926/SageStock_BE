@@ -22,6 +22,7 @@ from app.schemas.paper_schema import (
     PaperTradeResponse,
 )
 from app.schemas.stock_schema import StockResponse
+from app.services import stock_meta_service
 
 
 async def get_trades(
@@ -78,24 +79,24 @@ async def get_holdings(db: AsyncSession, user_id: int) -> list[HoldingResponse]:
     if not holdings:
         return []
 
-    # 현재가는 quote(§4.2)와 동일 소스 재사용, exchange는 리스팅 인덱스에서 조인.
-    index = await run_in_threadpool(market_source.get_listing_index)
+    # 현재가는 quote(§4.2)와 동일 소스 재사용, 종목 메타는 stock_meta 테이블에서 조인.
+    metas = await stock_meta_service.resolve_many(db, list(holdings))
     prices = await asyncio.gather(
         *[run_in_threadpool(_current_price, ticker) for ticker in holdings]
     )
 
     responses: list[HoldingResponse] = []
     for (ticker, agg), current_price in zip(holdings.items(), prices, strict=True):
-        meta = index.get(ticker)
-        exchange = meta.exchange if meta is not None else ""
+        # 메타가 아직 배치되지 않은 종목은 거래 기록의 name/market으로 폴백.
+        stock = metas.get(ticker) or StockResponse(
+            ticker=ticker,
+            name=agg.name,
+            market=Market(agg.market),
+            exchange="",
+        )
         responses.append(
             HoldingResponse(
-                stock=StockResponse(
-                    ticker=ticker,
-                    name=agg.name,
-                    market=Market(agg.market),
-                    exchange=exchange,
-                ),
+                stock=stock,
                 quantity=agg.quantity,
                 avg_price=agg.avg_price,
                 current_price=current_price,

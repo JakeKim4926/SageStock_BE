@@ -7,16 +7,17 @@ from app.data import market_source
 from app.dependencies.pagination_dependency import PageParams
 from app.models.watchlist_model import Watchlist
 from app.services import signal_service
-from tests.conftest import make_ohlcv
+from tests.conftest import make_ohlcv, seed_stock_meta
 
-_INDEX = {
-    "005930": market_source.StockMeta("005930", "삼성전자", Market.KR, "KOSPI"),
-    "000660": market_source.StockMeta("000660", "SK하이닉스", Market.KR, "KOSPI"),
-    "AAPL": market_source.StockMeta("AAPL", "Apple Inc.", Market.US, "NASDAQ"),
-}
+_ROWS = [
+    ("005930", "삼성전자", Market.KR, "KOSPI"),
+    ("000660", "SK하이닉스", Market.KR, "KOSPI"),
+    ("AAPL", "Apple Inc.", Market.US, "NASDAQ"),
+]
 
 
 async def _seed_watchlist(session: AsyncSession, tickers: list[str]) -> None:
+    await seed_stock_meta(session, _ROWS)
     for ticker in tickers:
         session.add(Watchlist(user_id=1, ticker=ticker))
     await session.commit()
@@ -24,7 +25,6 @@ async def _seed_watchlist(session: AsyncSession, tickers: list[str]) -> None:
 
 @pytest.mark.asyncio
 async def test_signals_feed_detects_and_sorts_desc(session: AsyncSession, monkeypatch) -> None:
-    monkeypatch.setattr(market_source, "get_listing_index", lambda: _INDEX)
     monkeypatch.setattr(market_source, "get_ohlcv", lambda ticker, days: make_ohlcv(250))
     await _seed_watchlist(session, ["005930", "000660"])
 
@@ -43,7 +43,6 @@ async def test_signals_feed_detects_and_sorts_desc(session: AsyncSession, monkey
 
 @pytest.mark.asyncio
 async def test_signals_market_filter_restricts_universe(session: AsyncSession, monkeypatch) -> None:
-    monkeypatch.setattr(market_source, "get_listing_index", lambda: _INDEX)
     monkeypatch.setattr(market_source, "get_ohlcv", lambda ticker, days: make_ohlcv(250))
     await _seed_watchlist(session, ["005930", "AAPL"])
 
@@ -56,7 +55,6 @@ async def test_signals_market_filter_restricts_universe(session: AsyncSession, m
 
 @pytest.mark.asyncio
 async def test_signals_skip_insufficient_data(session: AsyncSession, monkeypatch) -> None:
-    monkeypatch.setattr(market_source, "get_listing_index", lambda: _INDEX)
     monkeypatch.setattr(market_source, "get_ohlcv", lambda ticker, days: make_ohlcv(30))
     await _seed_watchlist(session, ["005930"])
 
@@ -70,7 +68,6 @@ async def test_signals_skip_insufficient_data(session: AsyncSession, monkeypatch
 
 @pytest.mark.asyncio
 async def test_signals_skip_empty_frame(session: AsyncSession, monkeypatch) -> None:
-    monkeypatch.setattr(market_source, "get_listing_index", lambda: _INDEX)
     monkeypatch.setattr(market_source, "get_ohlcv", lambda ticker, days: pd.DataFrame())
     await _seed_watchlist(session, ["005930"])
 

@@ -5,6 +5,18 @@
 
 ## 열린 항목
 
+### [2026-06-11] 검증누락 — stock_meta 배치 end-to-end 미실행
+- 위치: app/batch/refresh_stock_meta.py main
+- 설명: _persist(영속) 경로는 in-memory SQLite로 단위 검증했으나, 실제 `python -m app.batch.refresh_stock_meta`(fdr 리스팅 다운로드→Postgres replace_all)는 DB·네트워크 부재로 이 환경에서 실행 못 함.
+- 위험도: 중
+- 후속: DB 연결 환경에서 1회 실행해 행 수·소요시간 확인(콜드 ~15s)
+
+### [2026-06-11] 구조변경 — 서빙 메타가 stock_meta DB 선행 적재에 의존
+- 위치: app/services/stock_meta_service.py / market_source.get_listing_index는 이제 배치 전용
+- 설명: search/단건메타/watchlist·holdings 조인이 모두 stock_meta DB를 읽음. 배치 미실행(빈 테이블) 시 검색=빈결과, 단건=404. 콜드스타트 ~15s 제거를 위한 의도된 트레이드오프이나, 운영상 배치 선행이 필수 전제가 됨.
+- 위험도: 중
+- 후속: 배포 파이프라인에 마이그레이션 후 stock_meta 배치 1회 + cron 등록
+
 ### [2026-06-11] 임시구현 — paper_account 가입 시 미생성·첫 접근 시 지연 생성
 - 위치: app/services/paper_service.py _get_or_create_account
 - 설명: feature-spec §4.6은 "계정 생성 시 cash=seed"이나 signup(auth_service)은 손대지 않고 /paper 첫 접근 때 시드로 지연 생성. 동작은 동일하나 계정 생성 시점이 명세와 다름.
@@ -29,12 +41,6 @@
 - 위험도: 중
 - 후속: 장기선은 이력 충분 구간만 노출하거나 워밍업 구간 별도 처리
 
-### [2026-06-10] 구조불일치 — stock_meta 미영속(인메모리 리스팅 캐시)
-- 위치: app/data/market_source.py get_listing_index
-- 설명: 캐시 만료/콜드스타트 시 첫 search·meta 요청이 전체 KRX+NASDAQ+NYSE 리스팅 다운로드(~15s, tqdm 진행바 stderr 출력)를 유발.
-- 위험도: 중
-- 후속: B4에서 stock_meta DB 테이블 + 배치 갱신으로 전환
-
 ### [2026-06-10] 하드코딩 — Quote.isDelayed 항상 True
 - 위치: app/services/stock_service.py get_quote (IS_DELAYED_DEFAULT)
 - 설명: fdr 지연 시세라 KR/US 무관 True 고정. feature-spec은 KR 기본 True 명시.
@@ -48,6 +54,10 @@
 - 후속: [tool.mypy] ignore_missing_imports 또는 types-passlib/pandas-stubs 도입
 
 ## 해결됨
+
+### [2026-06-10] 구조불일치 — stock_meta 미영속(인메모리 리스팅 캐시) (B4에서 해결)
+- 위치: app/services/stock_meta_service.py / app/repositories/stock_meta_repository.py / app/batch/refresh_stock_meta.py
+- 설명: 콜드스타트 시 전체 리스팅 다운로드(~15s)를 유발하던 인메모리 캐시 의존을, stock_meta DB 테이블 + 일배치(replace_all)로 전환. 서빙(search·단건·조인)은 DB를 읽고, fdr 리스팅은 배치 전용. get_listing_index는 배치에서만 사용.
 
 ### [2026-06-11] 구조불일치 — /paper/holdings 현재가 종목별 순차 조회 (B3에서 해결)
 - 위치: app/services/paper_service.py get_holdings

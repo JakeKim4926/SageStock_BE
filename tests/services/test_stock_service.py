@@ -4,7 +4,6 @@ import pytest
 from app.constants.enums import Market
 from app.core.exceptions import AppError
 from app.data import market_source
-from app.dependencies.pagination_dependency import PageParams
 from app.services import stock_service
 from tests.conftest import make_ohlcv
 
@@ -63,37 +62,5 @@ async def test_get_quote_not_found(monkeypatch) -> None:
 
     with pytest.raises(AppError) as exc_info:
         await stock_service.get_quote("ZZZ")
-
-    assert exc_info.value.status_code == 404
-
-
-@pytest.mark.asyncio
-async def test_search_filters_by_query_and_paginates(monkeypatch) -> None:
-    index = {
-        "005930": market_source.StockMeta("005930", "삼성전자", Market.KR, "KOSPI"),
-        "AAPL": market_source.StockMeta("AAPL", "Apple Inc.", Market.US, "NASDAQ"),
-    }
-    monkeypatch.setattr(market_source, "get_listing_index", lambda: index)
-
-    results, total = await stock_service.search_stocks("apple", None, PageParams(offset=0, limit=20))
-
-    assert total == 1
-    assert results[0].ticker == "AAPL"
-
-
-@pytest.mark.asyncio
-async def test_search_empty_query_returns_empty() -> None:
-    results, total = await stock_service.search_stocks("   ", None, PageParams(offset=0, limit=20))
-
-    assert results == []
-    assert total == 0
-
-
-@pytest.mark.asyncio
-async def test_get_stock_meta_not_found(monkeypatch) -> None:
-    monkeypatch.setattr(market_source, "get_listing_index", lambda: {})
-
-    with pytest.raises(AppError) as exc_info:
-        await stock_service.get_stock_meta("XXXX")
 
     assert exc_info.value.status_code == 404

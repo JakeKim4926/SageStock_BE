@@ -5,6 +5,7 @@ fdr 호출은 블로킹이므로 이 모듈의 함수는 모두 동기(`def`)이
 결과는 in-memory TTL 캐시로 평탄화한다.
 """
 
+import logging
 from dataclasses import dataclass
 from datetime import date, timedelta
 
@@ -14,6 +15,8 @@ import pandas as pd  # type: ignore[import-untyped]
 from app.constants.enums import Market
 from app.constants.market import LISTING_CACHE_TTL_SECONDS, QUOTE_CACHE_TTL_SECONDS
 from app.data.cache import TTLCache
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -41,9 +44,14 @@ def get_ohlcv(ticker: str, lookback_days: int) -> pd.DataFrame:
         return cached
 
     start = date.today() - timedelta(days=lookback_days)
-    df = fdr.DataReader(ticker, start.isoformat())
-    _ohlcv_cache.set(cache_key, df)
+    try:
+        df = fdr.DataReader(ticker, start.isoformat())
+    except Exception:
+        # 외부 소스 실패/타임아웃 기록(§6). 빈 프레임 반환 → 호출부는 데이터 없음으로 처리.
+        logger.warning("fdr DataReader 실패 ticker=%s", ticker, exc_info=True)
+        return pd.DataFrame()
 
+    _ohlcv_cache.set(cache_key, df)
     return df
 
 
