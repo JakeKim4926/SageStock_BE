@@ -12,54 +12,10 @@ from app.constants.market import (
 )
 from app.core.exceptions import AppError
 from app.data import market_source
-from app.dependencies.pagination_dependency import PageParams
 from app.indicators.chart import compute_window
 from app.schemas.indicator_schema import CandleResponse, CrossMarkerResponse, IndicatorSetResponse
-from app.schemas.stock_schema import QuoteResponse, StockResponse
+from app.schemas.stock_schema import QuoteResponse
 from app.services.signal_detector import detect_signals
-
-
-async def search_stocks(
-    query: str,
-    market: Market | None,
-    page: PageParams,
-) -> tuple[list[StockResponse], int]:
-    normalized = query.strip().lower()
-
-    # 빈 검색어는 클라에서 차단(api-spec §2) — 방어적으로 빈 결과 반환.
-    if not normalized:
-        return [], 0
-
-    index = await run_in_threadpool(market_source.get_listing_index)
-
-    matches = [
-        meta
-        for meta in index.values()
-        if normalized in meta.name.lower() or normalized in meta.ticker.lower()
-    ]
-
-    if market is not None:
-        matches = [meta for meta in matches if meta.market == market]
-
-    matches.sort(key=lambda meta: meta.ticker)
-    total = len(matches)
-    window = matches[page.offset : page.offset + page.limit]
-
-    results = [
-        StockResponse(ticker=m.ticker, name=m.name, market=m.market, exchange=m.exchange)
-        for m in window
-    ]
-    return results, total
-
-
-async def get_stock_meta(ticker: str) -> StockResponse:
-    index = await run_in_threadpool(market_source.get_listing_index)
-    meta = index.get(ticker)
-
-    if meta is None:
-        raise AppError(error_codes.STOCK_NOT_FOUND, f"종목을 찾을 수 없습니다: {ticker}", 404)
-
-    return StockResponse(ticker=meta.ticker, name=meta.name, market=meta.market, exchange=meta.exchange)
 
 
 async def get_quote(ticker: str) -> QuoteResponse:

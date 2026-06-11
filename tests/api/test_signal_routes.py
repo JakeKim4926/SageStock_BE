@@ -1,12 +1,13 @@
 import pytest
 from httpx import AsyncClient
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.constants.enums import Market
 from app.data import market_source
-from tests.conftest import make_ohlcv
+from tests.conftest import make_ohlcv, seed_stock_meta
 
 _SIGNUP = {"email": "signals@example.com", "password": "s3cret-pw", "name": "시그"}
-_INDEX = {"005930": market_source.StockMeta("005930", "삼성전자", Market.KR, "KOSPI")}
+_ROWS = [("005930", "삼성전자", Market.KR, "KOSPI")]
 
 
 async def _access_token(client: AsyncClient) -> str:
@@ -25,9 +26,11 @@ async def test_signals_requires_auth(client: AsyncClient) -> None:
 
 
 @pytest.mark.asyncio
-async def test_signals_returns_feed_with_total_count(client: AsyncClient, monkeypatch) -> None:
-    monkeypatch.setattr(market_source, "get_listing_index", lambda: _INDEX)
+async def test_signals_returns_feed_with_total_count(
+    client: AsyncClient, session: AsyncSession, monkeypatch
+) -> None:
     monkeypatch.setattr(market_source, "get_ohlcv", lambda ticker, days: make_ohlcv(250))
+    await seed_stock_meta(session, _ROWS)
     token = await _access_token(client)
 
     await client.put("/v1/watchlist/005930", headers=_auth(token))

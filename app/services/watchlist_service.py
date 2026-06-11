@@ -1,11 +1,10 @@
-from fastapi.concurrency import run_in_threadpool
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.data import market_source
 from app.models.watchlist_model import Watchlist
 from app.repositories import watchlist_repository
 from app.schemas.stock_schema import StockResponse
+from app.services import stock_meta_service
 
 
 async def get_watchlist(db: AsyncSession, user_id: int) -> list[StockResponse]:
@@ -13,19 +12,9 @@ async def get_watchlist(db: AsyncSession, user_id: int) -> list[StockResponse]:
     if not tickers:
         return []
 
-    # 종목 메타는 리스팅 인덱스에서 조인(feature-spec §4.5). 인덱스에 없는 티커는 건너뛴다.
-    # (영속 stock_meta 테이블은 B4 — DEBT_LOG.)
-    index = await run_in_threadpool(market_source.get_listing_index)
-
-    results: list[StockResponse] = []
-    for ticker in tickers:
-        meta = index.get(ticker)
-        if meta is None:
-            continue
-        results.append(
-            StockResponse(ticker=meta.ticker, name=meta.name, market=meta.market, exchange=meta.exchange)
-        )
-    return results
+    # 종목 메타는 stock_meta 테이블에서 조인(feature-spec §4.5). 없는 티커는 건너뛴다.
+    metas = await stock_meta_service.resolve_many(db, tickers)
+    return [metas[ticker] for ticker in tickers if ticker in metas]
 
 
 async def add_to_watchlist(db: AsyncSession, user_id: int, ticker: str) -> None:

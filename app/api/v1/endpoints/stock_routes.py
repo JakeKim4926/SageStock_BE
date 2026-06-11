@@ -1,12 +1,14 @@
 from fastapi import APIRouter, Depends, Query, Response
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.constants.enums import Market
+from app.core.database import get_db
 from app.dependencies.auth_dependency import get_current_user
 from app.dependencies.pagination_dependency import PageParams, get_page_params, set_total_count
 from app.models.user_model import User
 from app.schemas.indicator_schema import IndicatorSetResponse
 from app.schemas.stock_schema import QuoteResponse, StockResponse
-from app.services import stock_service
+from app.services import stock_meta_service, stock_service
 
 router = APIRouter()
 
@@ -19,8 +21,9 @@ async def search_stocks(
     market: Market | None = Query(default=None),
     page: PageParams = Depends(get_page_params),
     _: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
 ) -> list[StockResponse]:
-    results, total = await stock_service.search_stocks(q, market, page)
+    results, total = await stock_meta_service.search(db, q, market, page)
     set_total_count(response, total)
     return results
 
@@ -29,8 +32,9 @@ async def search_stocks(
 async def get_stock(
     ticker: str,
     _: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
 ) -> StockResponse:
-    return await stock_service.get_stock_meta(ticker)
+    return await stock_meta_service.get_meta(db, ticker)
 
 
 @router.get("/{ticker}/quote", response_model=QuoteResponse)

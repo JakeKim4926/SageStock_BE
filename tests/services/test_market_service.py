@@ -8,13 +8,13 @@ from app.constants.enums import Market, MarketStatus
 from app.data import market_source
 from app.models.watchlist_model import Watchlist
 from app.services import market_service
-from tests.conftest import make_ohlcv
+from tests.conftest import make_ohlcv, seed_stock_meta
 
 _UTC = ZoneInfo("UTC")
-_INDEX = {
-    "005930": market_source.StockMeta("005930", "삼성전자", Market.KR, "KOSPI"),
-    "AAPL": market_source.StockMeta("AAPL", "Apple Inc.", Market.US, "NASDAQ"),
-}
+_ROWS = [
+    ("005930", "삼성전자", Market.KR, "KOSPI"),
+    ("AAPL", "Apple Inc.", Market.US, "NASDAQ"),
+]
 
 
 def test_kr_open_during_session() -> None:
@@ -54,8 +54,8 @@ def test_get_market_statuses_covers_all_markets() -> None:
 
 @pytest.mark.asyncio
 async def test_snapshots_use_watchlist_universe(session: AsyncSession, monkeypatch) -> None:
-    monkeypatch.setattr(market_source, "get_listing_index", lambda: _INDEX)
     monkeypatch.setattr(market_source, "get_ohlcv", lambda ticker, days: make_ohlcv(30))
+    await seed_stock_meta(session, _ROWS)
     session.add_all([Watchlist(user_id=1, ticker="005930"), Watchlist(user_id=1, ticker="AAPL")])
     await session.commit()
 

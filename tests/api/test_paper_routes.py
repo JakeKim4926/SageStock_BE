@@ -1,12 +1,13 @@
 import pytest
 from httpx import AsyncClient
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.constants.enums import Market
 from app.data import market_source
-from tests.conftest import make_ohlcv
+from tests.conftest import make_ohlcv, seed_stock_meta
 
 _SIGNUP = {"email": "paper@example.com", "password": "s3cret-pw", "name": "가상"}
-_INDEX = {"005930": market_source.StockMeta("005930", "삼성전자", Market.KR, "KOSPI")}
+_ROWS = [("005930", "삼성전자", Market.KR, "KOSPI")]
 
 
 async def _token(client: AsyncClient) -> str:
@@ -103,9 +104,11 @@ async def test_invalid_quantity_returns_400(client: AsyncClient) -> None:
 
 
 @pytest.mark.asyncio
-async def test_holdings_aggregate_weighted_average(client: AsyncClient, monkeypatch) -> None:
+async def test_holdings_aggregate_weighted_average(
+    client: AsyncClient, session: AsyncSession, monkeypatch
+) -> None:
     monkeypatch.setattr(market_source, "get_ohlcv", lambda ticker, days: make_ohlcv(10))
-    monkeypatch.setattr(market_source, "get_listing_index", lambda: _INDEX)
+    await seed_stock_meta(session, _ROWS)
     token = await _token(client)
 
     await client.post("/v1/paper/trades", json=_trade(price=100, quantity=10), headers=_auth(token))
