@@ -11,12 +11,6 @@
 - 위험도: 낮음
 - 후속: signup 트랜잭션에서 paper_account 생성으로 이동 검토
 
-### [2026-06-11] 구조불일치 — /paper/holdings 현재가 종목별 순차 조회
-- 위치: app/services/paper_service.py get_holdings
-- 설명: 보유 종목마다 _current_price를 await로 순차 호출. market_service.get_snapshots는 asyncio.gather로 동시 조회하는데 여기만 직렬 → 보유 종목 많으면 지연 누적.
-- 위험도: 낮음
-- 후속: gather로 종목별 현재가 동시 조회
-
 ### [2026-06-10] 임시구현 — 다이버전스 탐지 단순 3봉 피벗
 - 위치: app/services/signal_detector.py _pivots/_detect_divergences
 - 설명: 국소 저점/고점을 3봉 피벗으로만 잡아 직전 두 피벗을 비교. 완만한 스윙/노이즈에 취약해 정식 스윙 탐지 대비 오탐·누락 가능.
@@ -54,6 +48,10 @@
 - 후속: [tool.mypy] ignore_missing_imports 또는 types-passlib/pandas-stubs 도입
 
 ## 해결됨
+
+### [2026-06-11] 구조불일치 — /paper/holdings 현재가 종목별 순차 조회 (B3에서 해결)
+- 위치: app/services/paper_service.py get_holdings
+- 설명: 보유 종목별 현재가를 순차 await하던 것을 asyncio.gather로 동시 조회로 변경(market_service.get_snapshots와 동일 패턴). 보유 종목 수만큼 지연 누적되던 문제 해소.
 
 ### [2026-06-10] 임시구현 — 시세/시그널 피드 유니버스 하드코딩 시드 (B3에서 해결)
 - 위치: app/services/market_service.py get_snapshots / app/services/signal_service.py get_signals

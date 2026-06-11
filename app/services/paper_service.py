@@ -1,3 +1,4 @@
+import asyncio
 from dataclasses import dataclass
 from datetime import UTC, datetime
 
@@ -79,10 +80,12 @@ async def get_holdings(db: AsyncSession, user_id: int) -> list[HoldingResponse]:
 
     # 현재가는 quote(§4.2)와 동일 소스 재사용, exchange는 리스팅 인덱스에서 조인.
     index = await run_in_threadpool(market_source.get_listing_index)
+    prices = await asyncio.gather(
+        *[run_in_threadpool(_current_price, ticker) for ticker in holdings]
+    )
 
     responses: list[HoldingResponse] = []
-    for ticker, agg in holdings.items():
-        current_price = await run_in_threadpool(_current_price, ticker)
+    for (ticker, agg), current_price in zip(holdings.items(), prices, strict=True):
         meta = index.get(ticker)
         exchange = meta.exchange if meta is not None else ""
         responses.append(
