@@ -1,0 +1,1618 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "SageStock Backend",
+    "version": "0.1.0"
+  },
+  "servers": [
+    {
+      "url": "https://api.example.com/v1"
+    }
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "summary": "Health Check",
+        "operationId": "health_check_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "type": "object",
+                  "title": "Response Health Check Health Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/auth/signup": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Signup",
+        "operationId": "signup_v1_auth_signup_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SignupRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/auth/login": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Login",
+        "operationId": "login_v1_auth_login_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/auth/refresh": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Refresh",
+        "operationId": "refresh_v1_auth_refresh_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccessTokenResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/auth/logout": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Logout",
+        "operationId": "logout_v1_auth_logout_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LogoutRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/v1/stocks/search": {
+      "get": {
+        "tags": [
+          "stocks"
+        ],
+        "summary": "Search Stocks",
+        "operationId": "search_stocks_v1_stocks_search_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "title": "Q"
+            }
+          },
+          {
+            "name": "market",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/Market"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Market"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 20,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/StockResponse"
+                  },
+                  "title": "Response Search Stocks V1 Stocks Search Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/stocks/{ticker}": {
+      "get": {
+        "tags": [
+          "stocks"
+        ],
+        "summary": "Get Stock",
+        "operationId": "get_stock_v1_stocks__ticker__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "ticker",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Ticker"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StockResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/stocks/{ticker}/quote": {
+      "get": {
+        "tags": [
+          "stocks"
+        ],
+        "summary": "Get Quote",
+        "operationId": "get_quote_v1_stocks__ticker__quote_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "ticker",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Ticker"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QuoteResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/stocks/{ticker}/indicators": {
+      "get": {
+        "tags": [
+          "stocks"
+        ],
+        "summary": "Get Indicators",
+        "operationId": "get_indicators_v1_stocks__ticker__indicators_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "ticker",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Ticker"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IndicatorSetResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/market/snapshots": {
+      "get": {
+        "tags": [
+          "market"
+        ],
+        "summary": "Get Snapshots",
+        "operationId": "get_snapshots_v1_market_snapshots_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "market",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/Market"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Market"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/StockSnapshotResponse"
+                  },
+                  "title": "Response Get Snapshots V1 Market Snapshots Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/market/status": {
+      "get": {
+        "tags": [
+          "market"
+        ],
+        "summary": "Get Market Status",
+        "operationId": "get_market_status_v1_market_status_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/MarketStatusResponse"
+                  },
+                  "type": "array",
+                  "title": "Response Get Market Status V1 Market Status Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/v1/signals": {
+      "get": {
+        "tags": [
+          "signals"
+        ],
+        "summary": "Get Signals",
+        "operationId": "get_signals_v1_signals_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "market",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/Market"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Market"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 20,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SignalResponse"
+                  },
+                  "title": "Response Get Signals V1 Signals Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/watchlist": {
+      "get": {
+        "tags": [
+          "watchlist"
+        ],
+        "summary": "Get Watchlist",
+        "operationId": "get_watchlist_v1_watchlist_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/StockResponse"
+                  },
+                  "type": "array",
+                  "title": "Response Get Watchlist V1 Watchlist Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/v1/watchlist/{ticker}": {
+      "put": {
+        "tags": [
+          "watchlist"
+        ],
+        "summary": "Add Watchlist",
+        "operationId": "add_watchlist_v1_watchlist__ticker__put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "ticker",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Ticker"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "watchlist"
+        ],
+        "summary": "Remove Watchlist",
+        "operationId": "remove_watchlist_v1_watchlist__ticker__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "ticker",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Ticker"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/paper/trades": {
+      "get": {
+        "tags": [
+          "paper"
+        ],
+        "summary": "Get Trades",
+        "operationId": "get_trades_v1_paper_trades_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 20,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PaperTradeResponse"
+                  },
+                  "title": "Response Get Trades V1 Paper Trades Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "paper"
+        ],
+        "summary": "Create Trade",
+        "operationId": "create_trade_v1_paper_trades_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PaperTradeCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaperTradeResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/paper/holdings": {
+      "get": {
+        "tags": [
+          "paper"
+        ],
+        "summary": "Get Holdings",
+        "operationId": "get_holdings_v1_paper_holdings_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/HoldingResponse"
+                  },
+                  "type": "array",
+                  "title": "Response Get Holdings V1 Paper Holdings Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/v1/paper/account": {
+      "get": {
+        "tags": [
+          "paper"
+        ],
+        "summary": "Get Account",
+        "operationId": "get_account_v1_paper_account_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AccessTokenResponse": {
+        "properties": {
+          "accessToken": {
+            "type": "string",
+            "title": "Accesstoken"
+          },
+          "accessExpiresIn": {
+            "type": "integer",
+            "title": "Accessexpiresin"
+          }
+        },
+        "type": "object",
+        "required": [
+          "accessToken",
+          "accessExpiresIn"
+        ],
+        "title": "AccessTokenResponse"
+      },
+      "AccountResponse": {
+        "properties": {
+          "cash": {
+            "type": "number",
+            "title": "Cash"
+          },
+          "seed": {
+            "type": "number",
+            "title": "Seed"
+          }
+        },
+        "type": "object",
+        "required": [
+          "cash",
+          "seed"
+        ],
+        "title": "AccountResponse",
+        "description": "api-spec §4 — 예수금/시드 요약."
+      },
+      "CandleResponse": {
+        "properties": {
+          "date": {
+            "type": "string",
+            "title": "Date"
+          },
+          "open": {
+            "type": "number",
+            "title": "Open"
+          },
+          "high": {
+            "type": "number",
+            "title": "High"
+          },
+          "low": {
+            "type": "number",
+            "title": "Low"
+          },
+          "close": {
+            "type": "number",
+            "title": "Close"
+          },
+          "volume": {
+            "type": "integer",
+            "title": "Volume"
+          }
+        },
+        "type": "object",
+        "required": [
+          "date",
+          "open",
+          "high",
+          "low",
+          "close",
+          "volume"
+        ],
+        "title": "CandleResponse",
+        "description": "api-spec §2 Candle — 일봉 OHLCV."
+      },
+      "CrossMarkerResponse": {
+        "properties": {
+          "index": {
+            "type": "integer",
+            "title": "Index"
+          },
+          "type": {
+            "$ref": "#/components/schemas/CrossType"
+          }
+        },
+        "type": "object",
+        "required": [
+          "index",
+          "type"
+        ],
+        "title": "CrossMarkerResponse",
+        "description": "api-spec §2 CrossMarker — 차트 위 교차 마커(candles 인덱스 기준)."
+      },
+      "CrossType": {
+        "type": "string",
+        "enum": [
+          "GOLDEN",
+          "DEAD"
+        ],
+        "title": "CrossType"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "HoldingResponse": {
+        "properties": {
+          "stock": {
+            "$ref": "#/components/schemas/StockResponse"
+          },
+          "quantity": {
+            "type": "integer",
+            "title": "Quantity"
+          },
+          "avgPrice": {
+            "type": "number",
+            "title": "Avgprice"
+          },
+          "currentPrice": {
+            "type": "number",
+            "title": "Currentprice"
+          }
+        },
+        "type": "object",
+        "required": [
+          "stock",
+          "quantity",
+          "avgPrice",
+          "currentPrice"
+        ],
+        "title": "HoldingResponse",
+        "description": "api-spec §4 Holding — 서버 집계 보유현황. 평가손익은 클라 파생 계산."
+      },
+      "IndicatorSetResponse": {
+        "properties": {
+          "ticker": {
+            "type": "string",
+            "title": "Ticker"
+          },
+          "rsi14": {
+            "type": "number",
+            "title": "Rsi14"
+          },
+          "candles": {
+            "items": {
+              "$ref": "#/components/schemas/CandleResponse"
+            },
+            "type": "array",
+            "title": "Candles"
+          },
+          "rsiSeries": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Rsiseries"
+          },
+          "ema5": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Ema5"
+          },
+          "ema20": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Ema20"
+          },
+          "ema60": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Ema60"
+          },
+          "ema120": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Ema120"
+          },
+          "bollingerUpper": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Bollingerupper"
+          },
+          "bollingerMid": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Bollingermid"
+          },
+          "bollingerLower": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Bollingerlower"
+          },
+          "disparitySeries": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Disparityseries"
+          },
+          "stochasticK": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Stochastick"
+          },
+          "stochasticD": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Stochasticd"
+          },
+          "crossMarkers": {
+            "items": {
+              "$ref": "#/components/schemas/CrossMarkerResponse"
+            },
+            "type": "array",
+            "title": "Crossmarkers",
+            "default": []
+          },
+          "divergenceMarkers": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Divergencemarkers",
+            "default": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "ticker",
+          "rsi14",
+          "candles",
+          "rsiSeries",
+          "ema5",
+          "ema20",
+          "ema60",
+          "ema120",
+          "bollingerUpper",
+          "bollingerMid",
+          "bollingerLower",
+          "disparitySeries",
+          "stochasticK",
+          "stochasticD"
+        ],
+        "title": "IndicatorSetResponse",
+        "description": "api-spec §2 IndicatorSet — 차트 오버레이용 지표 시리즈.\n\n모든 시리즈는 candles 인덱스와 정렬한다(차트 오버레이 기준).\ncross_markers / divergence_markers 는 시그널 탐지(B2)에서 채운다 — B1은 빈 배열."
+      },
+      "LoginRequest": {
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email"
+          },
+          "password": {
+            "type": "string",
+            "title": "Password"
+          },
+          "autoLogin": {
+            "type": "boolean",
+            "title": "Autologin",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "email",
+          "password"
+        ],
+        "title": "LoginRequest"
+      },
+      "LogoutRequest": {
+        "properties": {
+          "refreshToken": {
+            "type": "string",
+            "title": "Refreshtoken"
+          }
+        },
+        "type": "object",
+        "required": [
+          "refreshToken"
+        ],
+        "title": "LogoutRequest"
+      },
+      "Market": {
+        "type": "string",
+        "enum": [
+          "KR",
+          "US"
+        ],
+        "title": "Market"
+      },
+      "MarketStatus": {
+        "type": "string",
+        "enum": [
+          "OPEN",
+          "PRE_MARKET",
+          "AFTER_MARKET",
+          "CLOSED"
+        ],
+        "title": "MarketStatus"
+      },
+      "MarketStatusResponse": {
+        "properties": {
+          "market": {
+            "$ref": "#/components/schemas/Market"
+          },
+          "status": {
+            "$ref": "#/components/schemas/MarketStatus"
+          }
+        },
+        "type": "object",
+        "required": [
+          "market",
+          "status"
+        ],
+        "title": "MarketStatusResponse",
+        "description": "api-spec §2 — 시장별 장 상태(서버 UTC 기준 판정)."
+      },
+      "PaperTradeCreateRequest": {
+        "properties": {
+          "ticker": {
+            "type": "string",
+            "title": "Ticker"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "market": {
+            "$ref": "#/components/schemas/Market"
+          },
+          "side": {
+            "$ref": "#/components/schemas/TradeSide"
+          },
+          "price": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Price"
+          },
+          "quantity": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Quantity"
+          }
+        },
+        "type": "object",
+        "required": [
+          "ticker",
+          "name",
+          "market",
+          "side",
+          "price",
+          "quantity"
+        ],
+        "title": "PaperTradeCreateRequest",
+        "description": "api-spec §4 POST /paper/trades 요청. 수량·가격 ≤0 은 400 (feature-spec §4.6)."
+      },
+      "PaperTradeResponse": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "ticker": {
+            "type": "string",
+            "title": "Ticker"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "market": {
+            "$ref": "#/components/schemas/Market"
+          },
+          "side": {
+            "$ref": "#/components/schemas/TradeSide"
+          },
+          "price": {
+            "type": "number",
+            "title": "Price"
+          },
+          "quantity": {
+            "type": "integer",
+            "title": "Quantity"
+          },
+          "timestamp": {
+            "type": "integer",
+            "title": "Timestamp"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "ticker",
+          "name",
+          "market",
+          "side",
+          "price",
+          "quantity",
+          "timestamp"
+        ],
+        "title": "PaperTradeResponse",
+        "description": "api-spec §4 PaperTrade — 가상매매 체결 기록(id·timestamp 서버 부여)."
+      },
+      "QuoteResponse": {
+        "properties": {
+          "ticker": {
+            "type": "string",
+            "title": "Ticker"
+          },
+          "price": {
+            "type": "number",
+            "title": "Price"
+          },
+          "change": {
+            "type": "number",
+            "title": "Change"
+          },
+          "changePercent": {
+            "type": "number",
+            "title": "Changepercent"
+          },
+          "open": {
+            "type": "number",
+            "title": "Open"
+          },
+          "high": {
+            "type": "number",
+            "title": "High"
+          },
+          "low": {
+            "type": "number",
+            "title": "Low"
+          },
+          "volume": {
+            "type": "integer",
+            "title": "Volume"
+          },
+          "isDelayed": {
+            "type": "boolean",
+            "title": "Isdelayed"
+          },
+          "market": {
+            "$ref": "#/components/schemas/Market"
+          }
+        },
+        "type": "object",
+        "required": [
+          "ticker",
+          "price",
+          "change",
+          "changePercent",
+          "open",
+          "high",
+          "low",
+          "volume",
+          "isDelayed",
+          "market"
+        ],
+        "title": "QuoteResponse",
+        "description": "api-spec §2 Quote — 현재가/등락/당일 OHLCV."
+      },
+      "RefreshRequest": {
+        "properties": {
+          "refreshToken": {
+            "type": "string",
+            "title": "Refreshtoken"
+          }
+        },
+        "type": "object",
+        "required": [
+          "refreshToken"
+        ],
+        "title": "RefreshRequest"
+      },
+      "RiskLevel": {
+        "type": "string",
+        "enum": [
+          "LOW",
+          "MEDIUM",
+          "HIGH"
+        ],
+        "title": "RiskLevel"
+      },
+      "SignalResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "ticker": {
+            "type": "string",
+            "title": "Ticker"
+          },
+          "stockName": {
+            "type": "string",
+            "title": "Stockname"
+          },
+          "type": {
+            "$ref": "#/components/schemas/SignalType"
+          },
+          "date": {
+            "type": "string",
+            "title": "Date"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "riskLevel": {
+            "$ref": "#/components/schemas/RiskLevel"
+          },
+          "candleIndex": {
+            "type": "integer",
+            "title": "Candleindex",
+            "default": -1
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "ticker",
+          "stockName",
+          "type",
+          "date",
+          "description",
+          "riskLevel"
+        ],
+        "title": "SignalResponse",
+        "description": "api-spec §2 Signal — 지표 기반 탐지 시그널."
+      },
+      "SignalType": {
+        "type": "string",
+        "enum": [
+          "GOLDEN_CROSS",
+          "DEAD_CROSS",
+          "RSI_OVERSOLD",
+          "RSI_OVERBOUGHT",
+          "BOLLINGER_BREAKOUT",
+          "BULLISH_DIVERGENCE",
+          "BEARISH_DIVERGENCE"
+        ],
+        "title": "SignalType"
+      },
+      "SignupRequest": {
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email"
+          },
+          "password": {
+            "type": "string",
+            "title": "Password"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "email",
+          "password",
+          "name"
+        ],
+        "title": "SignupRequest"
+      },
+      "StockResponse": {
+        "properties": {
+          "ticker": {
+            "type": "string",
+            "title": "Ticker"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "market": {
+            "$ref": "#/components/schemas/Market"
+          },
+          "exchange": {
+            "type": "string",
+            "title": "Exchange"
+          }
+        },
+        "type": "object",
+        "required": [
+          "ticker",
+          "name",
+          "market",
+          "exchange"
+        ],
+        "title": "StockResponse",
+        "description": "api-spec §2 Stock — 종목 기본 메타."
+      },
+      "StockSnapshotResponse": {
+        "properties": {
+          "stock": {
+            "$ref": "#/components/schemas/StockResponse"
+          },
+          "price": {
+            "type": "number",
+            "title": "Price"
+          },
+          "change": {
+            "type": "number",
+            "title": "Change"
+          },
+          "changePercent": {
+            "type": "number",
+            "title": "Changepercent"
+          },
+          "volume": {
+            "type": "integer",
+            "title": "Volume"
+          },
+          "sparkline": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Sparkline"
+          }
+        },
+        "type": "object",
+        "required": [
+          "stock",
+          "price",
+          "change",
+          "changePercent",
+          "volume",
+          "sparkline"
+        ],
+        "title": "StockSnapshotResponse",
+        "description": "api-spec §2 StockSnapshot — 홈 피드용 시세 스냅샷."
+      },
+      "TokenResponse": {
+        "properties": {
+          "accessToken": {
+            "type": "string",
+            "title": "Accesstoken"
+          },
+          "refreshToken": {
+            "type": "string",
+            "title": "Refreshtoken"
+          },
+          "accessExpiresIn": {
+            "type": "integer",
+            "title": "Accessexpiresin"
+          }
+        },
+        "type": "object",
+        "required": [
+          "accessToken",
+          "refreshToken",
+          "accessExpiresIn"
+        ],
+        "title": "TokenResponse"
+      },
+      "TradeSide": {
+        "type": "string",
+        "enum": [
+          "BUY",
+          "SELL"
+        ],
+        "title": "TradeSide"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    },
+    "securitySchemes": {
+      "HTTPBearer": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    }
+  }
+}
