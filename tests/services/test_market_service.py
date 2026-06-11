@@ -2,13 +2,19 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 
 import pytest
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.constants.enums import Market, MarketStatus
 from app.data import market_source
+from app.models.watchlist_model import Watchlist
 from app.services import market_service
 from tests.conftest import make_ohlcv
 
 _UTC = ZoneInfo("UTC")
+_INDEX = {
+    "005930": market_source.StockMeta("005930", "삼성전자", Market.KR, "KOSPI"),
+    "AAPL": market_source.StockMeta("AAPL", "Apple Inc.", Market.US, "NASDAQ"),
+}
 
 
 def test_kr_open_during_session() -> None:
@@ -47,11 +53,21 @@ def test_get_market_statuses_covers_all_markets() -> None:
 
 
 @pytest.mark.asyncio
-async def test_snapshots_filtered_by_market(monkeypatch) -> None:
+async def test_snapshots_use_watchlist_universe(session: AsyncSession, monkeypatch) -> None:
+    monkeypatch.setattr(market_source, "get_listing_index", lambda: _INDEX)
+    monkeypatch.setattr(market_source, "get_ohlcv", lambda ticker, days: make_ohlcv(30))
+    session.add_all([Watchlist(user_id=1, ticker="005930"), Watchlist(user_id=1, ticker="AAPL")])
+    await session.commit()
+
+    snapshots = await market_service.get_snapshots(session, 1, Market.KR)
+
+    assert all(snapshot.stock.market == Market.KR for snapshot in snapshots)
+    assert {snapshot.stock.ticker for snapshot in snapshots} == {"005930"}
+    assert len(snapshots[0].sparkline) == 20
+
+
+@pytest.mark.asyncio
+async def test_snapshots_empty_watchlist_returns_empty(session: AsyncSession, monkeypatch) -> None:
     monkeypatch.setattr(market_source, "get_ohlcv", lambda ticker, days: make_ohlcv(30))
 
-    snapshots = await market_service.get_snapshots(Market.KR)
-
-    assert len(snapshots) >= 1
-    assert all(snapshot.stock.market == Market.KR for snapshot in snapshots)
-    assert len(snapshots[0].sparkline) == 20
+    assert await market_service.get_snapshots(session, 1, None) == []
