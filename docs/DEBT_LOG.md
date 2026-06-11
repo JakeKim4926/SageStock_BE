@@ -5,6 +5,12 @@
 
 ## 열린 항목
 
+### [2026-06-11] 임시구현 — paper_account 가입 시 미생성·첫 접근 시 지연 생성
+- 위치: app/services/paper_service.py _get_or_create_account
+- 설명: feature-spec §4.6은 "계정 생성 시 cash=seed"이나 signup(auth_service)은 손대지 않고 /paper 첫 접근 때 시드로 지연 생성. 동작은 동일하나 계정 생성 시점이 명세와 다름.
+- 위험도: 낮음
+- 후속: signup 트랜잭션에서 paper_account 생성으로 이동 검토
+
 ### [2026-06-10] 임시구현 — 다이버전스 탐지 단순 3봉 피벗
 - 위치: app/services/signal_detector.py _pivots/_detect_divergences
 - 설명: 국소 저점/고점을 3봉 피벗으로만 잡아 직전 두 피벗을 비교. 완만한 스윙/노이즈에 취약해 정식 스윙 탐지 대비 오탐·누락 가능.
@@ -16,12 +22,6 @@
 - 설명: 120봉 윈도우 전체에서 탐지해 최대 ~6개월 전 시그널까지 포함. 최신순 정렬+페이지네이션으로 최근 것이 위로 오지만 total이 커지고 오래된 시그널이 노이즈가 될 수 있음.
 - 위험도: 낮음
 - 후속: 최근 N봉/일 컷오프 파라미터 도입 (api-spec 협의)
-
-### [2026-06-10] 임시구현 — 시세/시그널 피드 유니버스 하드코딩 시드
-- 위치: app/constants/market.py SEED_UNIVERSE / app/services/market_service.py / app/services/signal_service.py
-- 설명: /market/snapshots·/signals 모두 관심종목(watchlist) 기반이어야 하나 watchlist 도메인이 B3라 고정 시드 10종목으로 채움. 사용자별 피드가 아님.
-- 위험도: 중
-- 후속: B3 watchlist 연동 시 시드 → 사용자 watchlist 기반으로 교체
 
 ### [2026-06-10] 임시구현 — 영(young) 종목 지표 워밍업 패딩
 - 위치: app/services/stock_service.py _series_to_list
@@ -48,6 +48,14 @@
 - 후속: [tool.mypy] ignore_missing_imports 또는 types-passlib/pandas-stubs 도입
 
 ## 해결됨
+
+### [2026-06-11] 구조불일치 — /paper/holdings 현재가 종목별 순차 조회 (B3에서 해결)
+- 위치: app/services/paper_service.py get_holdings
+- 설명: 보유 종목별 현재가를 순차 await하던 것을 asyncio.gather로 동시 조회로 변경(market_service.get_snapshots와 동일 패턴). 보유 종목 수만큼 지연 누적되던 문제 해소.
+
+### [2026-06-10] 임시구현 — 시세/시그널 피드 유니버스 하드코딩 시드 (B3에서 해결)
+- 위치: app/services/market_service.py get_snapshots / app/services/signal_service.py get_signals
+- 설명: /market/snapshots·/signals가 고정 시드(SEED_UNIVERSE)를 쓰던 것을, B3 watchlist 도메인 추가 후 로그인 사용자 watchlist 기반 유니버스로 교체. SEED_UNIVERSE 상수 제거. 빈 watchlist는 빈 피드를 반환한다.
 
 ### [2026-06-10] 임시구현 — IndicatorSet cross/divergence 마커 빈 배열 (B2에서 해결)
 - 위치: app/services/stock_service.py _build_indicator_set

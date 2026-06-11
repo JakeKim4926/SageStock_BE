@@ -3,34 +3,34 @@ from datetime import datetime, time
 from zoneinfo import ZoneInfo
 
 from fastapi.concurrency import run_in_threadpool
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.constants.enums import Market, MarketStatus
-from app.constants.market import (
-    MARKET_HOURS,
-    SEED_UNIVERSE,
-    SNAPSHOT_LOOKBACK_DAYS,
-    SPARKLINE_LENGTH,
-)
+from app.constants.market import MARKET_HOURS, SNAPSHOT_LOOKBACK_DAYS, SPARKLINE_LENGTH
 from app.data import market_source
 from app.schemas.stock_schema import MarketStatusResponse, StockResponse, StockSnapshotResponse
+from app.services import watchlist_service
 
 
-async def get_snapshots(market: Market | None) -> list[StockSnapshotResponse]:
-    universe = [
-        seed for seed in SEED_UNIVERSE if market is None or seed[2] == market
-    ]
+async def get_snapshots(
+    db: AsyncSession,
+    user_id: int,
+    market: Market | None,
+) -> list[StockSnapshotResponse]:
+    # 피드 유니버스 = 로그인 사용자 관심종목 (architecture: 피드는 watchlist 기반).
+    # watchlist가 비면 빈 피드를 반환한다.
+    universe = await watchlist_service.get_watchlist(db, user_id)
+    if market is not None:
+        universe = [stock for stock in universe if stock.market == market]
 
-    snapshots = await asyncio.gather(*[_build_snapshot(seed) for seed in universe])
+    snapshots = await asyncio.gather(*[_build_snapshot(stock) for stock in universe])
     return [snapshot for snapshot in snapshots if snapshot is not None]
 
 
-async def _build_snapshot(
-    seed: tuple[str, str, Market, str],
-) -> StockSnapshotResponse | None:
-    ticker, name, market, exchange = seed
-    df = await run_in_threadpool(market_source.get_ohlcv, ticker, SNAPSHOT_LOOKBACK_DAYS)
+async def _build_snapshot(stock: StockResponse) -> StockSnapshotResponse | None:
+    df = await run_in_threadpool(market_source.get_ohlcv, stock.ticker, SNAPSHOT_LOOKBACK_DAYS)
 
-    # 시드 종목이 일시적으로 조회 실패해도 전체 피드를 깨뜨리지 않는다.
+    # 한 종목이 일시적으로 조회 실패해도 전체 피드를 깨뜨리지 않는다.
     if df.empty:
         return None
 
@@ -41,7 +41,7 @@ async def _build_snapshot(
     change_percent = (change / prev_close * 100) if prev_close else 0.0
 
     return StockSnapshotResponse(
-        stock=StockResponse(ticker=ticker, name=name, market=market, exchange=exchange),
+        stock=stock,
         price=price,
         change=change,
         change_percent=change_percent,

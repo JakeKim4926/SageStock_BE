@@ -50,19 +50,3 @@ MARKET_HOURS: Final[dict[Market, MarketHours]] = {
         after_close=(20, 0),
     ),
 }
-
-# /market/snapshots 임시 시드 유니버스 (B1 한정).
-# 아키텍처상 스냅샷은 watchlist 기반이나 watchlist 도메인은 B3 → 그때 교체한다.
-# (ticker, name, market, exchange)
-SEED_UNIVERSE: Final[tuple[tuple[str, str, Market, str], ...]] = (
-    ("005930", "삼성전자", Market.KR, "KOSPI"),
-    ("000660", "SK하이닉스", Market.KR, "KOSPI"),
-    ("035420", "NAVER", Market.KR, "KOSPI"),
-    ("035720", "카카오", Market.KR, "KOSPI"),
-    ("005380", "현대차", Market.KR, "KOSPI"),
-    ("247540", "에코프로비엠", Market.KR, "KOSDAQ"),
-    ("AAPL", "Apple Inc.", Market.US, "NASDAQ"),
-    ("MSFT", "Microsoft Corporation", Market.US, "NASDAQ"),
-    ("NVDA", "NVIDIA Corporation", Market.US, "NASDAQ"),
-    ("TSLA", "Tesla, Inc.", Market.US, "NASDAQ"),
-)

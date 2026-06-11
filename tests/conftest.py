@@ -28,7 +28,7 @@ def make_ohlcv(rows: int, start_price: float = 100.0) -> pd.DataFrame:
 
 
 @pytest_asyncio.fixture
-async def client() -> AsyncGenerator[AsyncClient, None]:
+async def session_factory() -> AsyncGenerator[async_sessionmaker[AsyncSession], None]:
     # in-memory SQLite. StaticPool로 단일 커넥션 유지 → 세션 간 동일 DB 공유.
     engine = create_async_engine(
         "sqlite+aiosqlite://",
@@ -38,8 +38,15 @@ async def client() -> AsyncGenerator[AsyncClient, None]:
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
-    session_factory = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+    yield async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
+    await engine.dispose()
+
+
+@pytest_asyncio.fixture
+async def client(
+    session_factory: async_sessionmaker[AsyncSession],
+) -> AsyncGenerator[AsyncClient, None]:
     async def override_get_db() -> AsyncGenerator[AsyncSession, None]:
         async with session_factory() as session:
             yield session
@@ -50,4 +57,12 @@ async def client() -> AsyncGenerator[AsyncClient, None]:
         yield test_client
 
     app.dependency_overrides.clear()
-    await engine.dispose()
+
+
+@pytest_asyncio.fixture
+async def session(
+    session_factory: async_sessionmaker[AsyncSession],
+) -> AsyncGenerator[AsyncSession, None]:
+    """서비스 레이어 단위 테스트용 세션(client와 동일 in-memory DB 공유)."""
+    async with session_factory() as db_session:
+        yield db_session
