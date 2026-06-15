@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.constants.enums import Market, MarketStatus
 from app.constants.market import MARKET_HOURS, SNAPSHOT_LOOKBACK_DAYS, SPARKLINE_LENGTH
-from app.data import market_source
+from app.data import kis_source, market_source
 from app.schemas.stock_schema import MarketStatusResponse, StockResponse, StockSnapshotResponse
 from app.services import watchlist_service
 
@@ -39,13 +39,22 @@ async def _build_snapshot(stock: StockResponse) -> StockSnapshotResponse | None:
     prev_close = float(df.iloc[-2]["Close"]) if len(df) >= 2 else price
     change = price - prev_close
     change_percent = (change / prev_close * 100) if prev_close else 0.0
+    volume = int(df.iloc[-1]["Volume"])
+
+    # KR 종목은 현재가/등락/거래량을 KIS 실시간으로 덮어쓴다. 스파크라인은 fdr 일봉 유지.
+    live = await kis_source.get_current_quote(stock.ticker)
+    if live is not None:
+        price = live.price
+        change = live.change
+        change_percent = live.change_percent
+        volume = live.volume
 
     return StockSnapshotResponse(
         stock=stock,
         price=price,
         change=change,
         change_percent=change_percent,
-        volume=int(df.iloc[-1]["Volume"]),
+        volume=volume,
         sparkline=closes,
     )
 

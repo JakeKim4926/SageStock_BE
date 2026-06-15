@@ -1,7 +1,8 @@
 import pytest
 from httpx import AsyncClient
 
-from app.data import market_source
+from app.data import kis_source, market_source
+from app.data.kis_source import KisQuote
 from tests.conftest import make_ohlcv
 
 _SIGNUP = {"email": "market@example.com", "password": "s3cret-pw", "name": "메이"}
@@ -32,6 +33,53 @@ async def test_quote_returns_camel_case(client: AsyncClient, monkeypatch) -> Non
     body = response.json()
     assert body["ticker"] == "005930"
     assert "changePercent" in body  # 와이어 camelCase (api-spec §0)
+
+
+@pytest.mark.asyncio
+async def test_quote_uses_kis_realtime_when_available(client: AsyncClient, monkeypatch) -> None:
+    async def fake_quote(ticker: str) -> KisQuote:
+        return KisQuote(
+            price=80000.0,
+            change=1500.0,
+            change_percent=1.91,
+            open=79000.0,
+            high=80500.0,
+            low=78500.0,
+            volume=1234567,
+        )
+
+    monkeypatch.setattr(kis_source, "get_current_quote", fake_quote)
+    token = await _access_token(client)
+
+    response = await client.get(
+        "/v1/stocks/005930/quote",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["price"] == 80000.0
+    assert body["isDelayed"] is False  # KIS 실시간이면 지연 아님
+
+
+@pytest.mark.asyncio
+async def test_quote_falls_back_to_delayed_when_kis_unavailable(
+    client: AsyncClient, monkeypatch
+) -> None:
+    async def no_quote(ticker: str) -> None:
+        return None
+
+    monkeypatch.setattr(kis_source, "get_current_quote", no_quote)
+    monkeypatch.setattr(market_source, "get_ohlcv", lambda ticker, days: make_ohlcv(10))
+    token = await _access_token(client)
+
+    response = await client.get(
+        "/v1/stocks/005930/quote",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["isDelayed"] is True  # 폴백 시 지연 시세
 
 
 @pytest.mark.asyncio
