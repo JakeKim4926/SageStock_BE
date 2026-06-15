@@ -11,7 +11,7 @@ from app.constants.market import (
     QUOTE_LOOKBACK_DAYS,
 )
 from app.core.exceptions import AppError
-from app.data import market_source
+from app.data import kis_source, market_source
 from app.indicators.chart import compute_window
 from app.schemas.indicator_schema import CandleResponse, CrossMarkerResponse, IndicatorSetResponse
 from app.schemas.stock_schema import QuoteResponse
@@ -19,6 +19,22 @@ from app.services.signal_detector import detect_signals
 
 
 async def get_quote(ticker: str) -> QuoteResponse:
+    # KR 종목은 KIS 실시간 현재가 우선. 미설정·비KR·실패 시 fdr 일봉으로 폴백.
+    live = await kis_source.get_current_quote(ticker)
+    if live is not None:
+        return QuoteResponse(
+            ticker=ticker,
+            price=live.price,
+            change=live.change,
+            change_percent=live.change_percent,
+            open=live.open,
+            high=live.high,
+            low=live.low,
+            volume=live.volume,
+            is_delayed=False,
+            market=_resolve_market(ticker),
+        )
+
     df = await run_in_threadpool(market_source.get_ohlcv, ticker, QUOTE_LOOKBACK_DAYS)
 
     if df.empty:

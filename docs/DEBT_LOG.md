@@ -5,6 +5,24 @@
 
 ## 열린 항목
 
+### [2026-06-15] 검증누락 — KIS HTTP 왕복 통합테스트 없음
+- 위치: app/data/kis_source.py get_current_quote / _get_token
+- 설명: _parse_quote 단위테스트와 미설정·비KR None 케이스만 커버. 실제 토큰 발급→현재가 GET의 httpx 왕복과 KIS 응답 스키마(필드명 stck_prpr 등)는 키 부재로 미검증. 필드명이 실제와 다르면 파싱 실패→폴백으로 숨겨짐.
+- 위험도: 중
+- 후속: httpx MockTransport로 경로 테스트 + 실키로 1회 스모크 후 필드 확정
+
+### [2026-06-15] 후속분리 — 해외(US) 종목 실시간 현재가 미구현
+- 위치: app/services/market_service.py _build_snapshot / app/services/stock_service.py get_quote
+- 설명: KIS 국내 현재가만 붙임. US는 여전히 fdr 일봉 지연. is_delayed는 KR(KIS)만 False, US는 True 유지(의도된 1차 범위).
+- 위험도: 낮음
+- 후속: KIS 해외주식 현재가(별도 tr_id) 도입 검토
+
+### [2026-06-15] 임시구현 — 실시간 현재가 캐시 없음·KIS 선행 호출
+- 위치: app/data/kis_source.py get_current_quote (호출: market_service/stock_service)
+- 설명: 매 요청·관심종목 수만큼 KIS를 호출하고 결과 캐시 없음. KIS를 fdr보다 선행 호출해, KIS가 느리면 타임아웃(5s)만큼 응답 지연. 1인 앱·소규모 watchlist엔 충분하나 폴링 주기↑/유니버스↑ 시 호출량·레이턴시 부담.
+- 위험도: 중
+- 후속: 단기 TTL 캐시(수 초) 또는 동시성 제한 도입
+
 ### [2026-06-11] 검증누락 — stock_meta 배치 end-to-end 미실행
 - 위치: app/batch/refresh_stock_meta.py main
 - 설명: _persist(영속) 경로는 in-memory SQLite로 단위 검증했으나, 실제 `python -m app.batch.refresh_stock_meta`(fdr 리스팅 다운로드→Postgres replace_all)는 DB·네트워크 부재로 이 환경에서 실행 못 함.
@@ -41,12 +59,6 @@
 - 위험도: 중
 - 후속: 장기선은 이력 충분 구간만 노출하거나 워밍업 구간 별도 처리
 
-### [2026-06-10] 하드코딩 — Quote.isDelayed 항상 True
-- 위치: app/services/stock_service.py get_quote (IS_DELAYED_DEFAULT)
-- 설명: fdr 지연 시세라 KR/US 무관 True 고정. feature-spec은 KR 기본 True 명시.
-- 위험도: 낮음
-- 후속: 실시간 시세 소스 도입 시 시장별 판정(§10)
-
 ### [2026-06-10] 기존부채 — mypy 전역 설정 부재 / passlib 스텁 에러
 - 위치: app/core/security.py:5 (이번 작업 외), pyproject.toml(설정 없음)
 - 설명: mypy 설정이 없어 서드파티 스텁 누락이 에러로 남음. 내 신규 코드는 pandas/fdr import에 인라인 `# type: ignore[import-untyped]`로 처리했으나 근본 설정은 없음. develop에서도 passlib 에러 존재.
@@ -54,6 +66,10 @@
 - 후속: [tool.mypy] ignore_missing_imports 또는 types-passlib/pandas-stubs 도입
 
 ## 해결됨
+
+### [2026-06-10] 하드코딩 — Quote.isDelayed 항상 True (KIS 실시간 도입에서 부분 해결)
+- 위치: app/services/stock_service.py get_quote / app/data/kis_source.py
+- 설명: KR 종목은 KIS 실시간 현재가 도입으로 is_delayed=False 판정(시장별 분기). US 잔여(여전히 fdr 지연)는 위 열린 항목 "후속분리 — 해외(US) 종목 실시간 현재가 미구현"으로 이관.
 
 ### [2026-06-10] 구조불일치 — stock_meta 미영속(인메모리 리스팅 캐시) (B4에서 해결)
 - 위치: app/services/stock_meta_service.py / app/repositories/stock_meta_repository.py / app/batch/refresh_stock_meta.py

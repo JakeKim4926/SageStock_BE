@@ -19,6 +19,12 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REFRESH_TOKEN_EXPIRE_DAYS: int = 14
 
+    # 한국투자증권(KIS) Open API — 국내(KR) 실시간 현재가.
+    # 키 미설정 시 fdr 일봉(지연 시세)으로 폴백 → 앱은 키 없이도 동작.
+    KIS_APP_KEY: str = ""
+    KIS_APP_SECRET: str = ""
+    KIS_BASE_URL: str = "https://openapi.koreainvestment.com:9443"
+
     BACKEND_CORS_ORIGINS: list[str] = []
 
     model_config = SettingsConfigDict(
