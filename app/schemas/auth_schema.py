@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict, EmailStr
+from pydantic import BaseModel, ConfigDict
 from pydantic.alias_generators import to_camel
 
 
@@ -8,13 +8,14 @@ class _CamelModel(BaseModel):
 
 
 class SignupRequest(_CamelModel):
-    email: EmailStr
+    # 1인 전용 앱 — 로그인 식별자는 이메일 형식을 강제하지 않는다(아이디 허용).
+    email: str
     password: str
     name: str
 
 
 class LoginRequest(_CamelModel):
-    email: EmailStr
+    email: str
     password: str
     auto_login: bool = False
 
