@@ -26,9 +26,13 @@ _MARKET_DIV_CODE = "J"  # 주식
 _HTTP_TIMEOUT = 5.0
 # 만료 직전 갱신 여유(초). KIS access token 수명은 통상 24h(expires_in).
 _TOKEN_REFRESH_MARGIN_SECONDS = 60
+# 토큰 발급 실패(예: '1분당 1회' 초과) 후 재시도 쿨다운(초).
+# 폴링이 tokenP를 난타해 KIS 제한에 영구히 걸리는 자가 충돌을 방지.
+_TOKEN_RETRY_COOLDOWN_SECONDS = 60
 
 _token: str | None = None
 _token_expires_at: datetime | None = None
+_token_retry_after: datetime | None = None
 _token_lock = asyncio.Lock()
 
 
@@ -76,29 +80,48 @@ def _parse_quote(output: dict[str, str]) -> KisQuote:
     )
 
 
-async def _get_token(client: httpx.AsyncClient) -> str:
-    """캐시된 토큰 반환, 없거나 만료 임박이면 재발급. 발급은 Lock으로 직렬화."""
-    global _token, _token_expires_at
+async def _get_token(client: httpx.AsyncClient) -> str | None:
+    """캐시된 토큰 반환, 없거나 만료 임박이면 재발급. 발급은 Lock으로 직렬화.
+
+    발급 실패 시 None을 반환하고 쿨다운을 설정 — 폴링이 tokenP를 난타하지 않도록.
+    실패 본문(EGW 코드)을 로그에 남겨 원인(제한 vs 키오류)을 진단 가능하게 한다."""
+    global _token, _token_expires_at, _token_retry_after
 
     async with _token_lock:
         now = datetime.now(UTC)
         if _token is not None and _token_expires_at is not None and now < _token_expires_at:
             return _token
+        if _token_retry_after is not None and now < _token_retry_after:
+            return None
 
-        response = await client.post(
-            _TOKEN_PATH,
-            json={
-                "grant_type": "client_credentials",
-                "appkey": settings.KIS_APP_KEY,
-                "appsecret": settings.KIS_APP_SECRET,
-            },
-        )
-        response.raise_for_status()
+        try:
+            response = await client.post(
+                _TOKEN_PATH,
+                json={
+                    "grant_type": "client_credentials",
+                    "appkey": settings.KIS_APP_KEY,
+                    "appsecret": settings.KIS_APP_SECRET,
+                },
+            )
+            response.raise_for_status()
+        except httpx.HTTPError as exc:
+            _token_retry_after = now + timedelta(seconds=_TOKEN_RETRY_COOLDOWN_SECONDS)
+            resp = getattr(exc, "response", None)
+            status = resp.status_code if resp is not None else None
+            body = resp.text[:200] if resp is not None else str(exc)
+            logger.warning(
+                "KIS 토큰 발급 실패 status=%s body=%s (쿨다운 %ss)",
+                status,
+                body,
+                _TOKEN_RETRY_COOLDOWN_SECONDS,
+            )
+            return None
+
         data = response.json()
-
         _token = str(data["access_token"])
         expires_in = int(data.get("expires_in", 86400))
         _token_expires_at = now + timedelta(seconds=expires_in - _TOKEN_REFRESH_MARGIN_SECONDS)
+        _token_retry_after = None
         return _token
 
 
@@ -112,6 +135,8 @@ async def get_current_quote(ticker: str) -> KisQuote | None:
             base_url=settings.KIS_BASE_URL, timeout=_HTTP_TIMEOUT
         ) as client:
             token = await _get_token(client)
+            if token is None:
+                return None
             response = await client.get(
                 _PRICE_PATH,
                 params={"fid_cond_mrkt_div_code": _MARKET_DIV_CODE, "fid_input_iscd": ticker},
