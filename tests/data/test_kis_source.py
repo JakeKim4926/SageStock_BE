@@ -37,8 +37,10 @@ def test_parse_quote_down_uses_sign() -> None:
 
 
 @pytest.mark.asyncio
-async def test_get_current_quote_none_when_not_configured() -> None:
-    # 기본 설정은 KIS 키가 비어 있음 → 네트워크 호출 없이 None.
+async def test_get_current_quote_none_when_not_configured(monkeypatch) -> None:
+    # 키 미설정이면 네트워크 호출 없이 None. (.env에 실제 키가 있어도 결정적이도록 강제로 비움)
+    monkeypatch.setattr(settings, "KIS_APP_KEY", "")
+    monkeypatch.setattr(settings, "KIS_APP_SECRET", "")
     assert await get_current_quote("005930") is None
 
 
