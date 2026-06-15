@@ -23,12 +23,6 @@
 - 위험도: 중
 - 후속: 단기 TTL 캐시(수 초) 또는 동시성 제한 도입
 
-### [2026-06-11] 검증누락 — stock_meta 배치 end-to-end 미실행
-- 위치: app/batch/refresh_stock_meta.py main
-- 설명: _persist(영속) 경로는 in-memory SQLite로 단위 검증했으나, 실제 `python -m app.batch.refresh_stock_meta`(fdr 리스팅 다운로드→Postgres replace_all)는 DB·네트워크 부재로 이 환경에서 실행 못 함.
-- 위험도: 중
-- 후속: DB 연결 환경에서 1회 실행해 행 수·소요시간 확인(콜드 ~15s)
-
 ### [2026-06-11] 구조변경 — 서빙 메타가 stock_meta DB 선행 적재에 의존
 - 위치: app/services/stock_meta_service.py / market_source.get_listing_index는 이제 배치 전용
 - 설명: search/단건메타/watchlist·holdings 조인이 모두 stock_meta DB를 읽음. 배치 미실행(빈 테이블) 시 검색=빈결과, 단건=404. 콜드스타트 ~15s 제거를 위한 의도된 트레이드오프이나, 운영상 배치 선행이 필수 전제가 됨.
@@ -66,6 +60,10 @@
 - 후속: [tool.mypy] ignore_missing_imports 또는 types-passlib/pandas-stubs 도입
 
 ## 해결됨
+
+### [2026-06-11] 검증누락 — stock_meta 배치 end-to-end 미실행 (2026-06-15 해결)
+- 위치: app/batch/refresh_stock_meta.py / .github/workflows/refresh-stock-meta.yml
+- 설명: 운영 Neon에 수동 1회 적재(~9.5천종목) + GitHub Actions 워크플로 수동 실행으로 end-to-end 검증 완료(1m28s, replace_all). 일배치 cron(매일 03:00 KST)도 등록 — "배포 파이프라인에 cron 등록" 후속도 함께 해소.
 
 ### [2026-06-10] 하드코딩 — Quote.isDelayed 항상 True (KIS 실시간 도입에서 부분 해결)
 - 위치: app/services/stock_service.py get_quote / app/data/kis_source.py
