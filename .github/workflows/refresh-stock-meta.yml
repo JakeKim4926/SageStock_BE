@@ -1,0 +1,24 @@
+name: refresh-stock-meta
+
+# 종목 메타(stock_meta) 일배치 — KRX+NASDAQ+NYSE 리스팅을 받아 DB를 전량 갱신.
+# Render 무료 플랜엔 cron이 없어 GitHub Actions 스케줄로 돌린다(무료 호스팅 계획).
+# 스케줄은 기본 브랜치(main)에서만 실행되므로 이 파일은 main에 있어야 한다.
+on:
+  schedule:
+    - cron: "0 18 * * *" # 매일 18:00 UTC = 03:00 KST
+  workflow_dispatch: {}
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install deps
+        run: pip install uv && uv sync --frozen
+      - name: Run stock_meta batch
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: uv run python -m app.batch.refresh_stock_meta
