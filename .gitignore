@@ -227,3 +227,6 @@ __marimo__/
 uploads/
 media/
 staticfiles/
+
+# Claude
+.claude/

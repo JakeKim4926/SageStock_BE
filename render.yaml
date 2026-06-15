@@ -1,0 +1,27 @@
+# Render Blueprint. 무료 웹서비스로 FastAPI 백엔드 배포.
+# 시크릿(DATABASE_URL 등)은 레포에 두지 않음 → 대시보드에서 주입(sync:false).
+services:
+  - type: web
+    name: sagestock-be
+    runtime: python
+    plan: free
+    region: singapore # Neon ap-southeast-1과 동일 리전으로 레이턴시 최소화
+    branch: develop
+    buildCommand: pip install uv && uv sync --frozen
+    startCommand: uv run uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11"
+      - key: DATABASE_URL # Neon connection string (asyncpg+ssl) — 대시보드에서 입력
+        sync: false
+      - key: SECRET_KEY # Render가 랜덤 생성 → config.py 기본값 덮어씀
+        generateValue: true
+      - key: PUBLIC_BASE_URL # 최초 배포 후 발급된 https URL로 채움 (OpenAPI servers용)
+        sync: false
+      - key: KIS_APP_KEY # 한국투자증권 Open API 앱키 — 대시보드에서 입력(시크릿)
+        sync: false
+      - key: KIS_APP_SECRET # KIS 앱시크릿 — 대시보드에서 입력(시크릿)
+        sync: false
+      - key: KIS_BASE_URL # 실전 도메인. 모의투자면 openapivts...:29443으로 교체
+        value: "https://openapi.koreainvestment.com:9443"
