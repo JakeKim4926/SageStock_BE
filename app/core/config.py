@@ -25,6 +25,11 @@ class Settings(BaseSettings):
     KIS_APP_SECRET: str = ""
     KIS_BASE_URL: str = "https://openapi.koreainvestment.com:9443"
 
+    # KRX 정보데이터시스템 자격증명 — pykrx 수급(기관/외국인) 조회용.
+    # 미설정 시 수급 피처는 0으로 폴백(예측은 계속 동작).
+    KRX_ID: str = ""
+    KRX_PW: str = ""
+
     BACKEND_CORS_ORIGINS: list[str] = []
 
     model_config = SettingsConfigDict(
