@@ -32,3 +32,20 @@ SIGNAL_DESCRIPTIONS: Final[dict[SignalType, str]] = {
     SignalType.BULLISH_DIVERGENCE: "강세 다이버전스 (가격 저점↓·RSI 저점↑)",
     SignalType.BEARISH_DIVERGENCE: "약세 다이버전스 (가격 고점↑·RSI 고점↓)",
 }
+
+# 시그널 종합점수 가중(/signals/ranking). 매수(+)/매도(-) 방향과 강도.
+# 추세 전환(크로스·다이버전스)을 ±2로 더 무겁게, RSI 과열/침체는 ±1.
+# BOLLINGER_BREAKOUT은 상/하단 방향 미구분이라 중립(0) → 점수 제외.
+SIGNAL_WEIGHTS: Final[dict[SignalType, int]] = {
+    SignalType.GOLDEN_CROSS: 2,
+    SignalType.BULLISH_DIVERGENCE: 2,
+    SignalType.RSI_OVERSOLD: 1,
+    SignalType.DEAD_CROSS: -2,
+    SignalType.BEARISH_DIVERGENCE: -2,
+    SignalType.RSI_OVERBOUGHT: -1,
+    SignalType.BOLLINGER_BREAKOUT: 0,
+}
+
+# 시간감쇠 계수: 오래된 시그널일수록 weight × DECAY**(최신봉 - 시그널봉)로 약화.
+# 0.9면 ~20봉 전 시그널은 기여 ~12%로 감쇠 → 최근 신호 위주로 랭킹.
+SCORE_DECAY: Final = 0.9

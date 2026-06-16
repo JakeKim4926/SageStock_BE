@@ -6,7 +6,7 @@ from app.core.database import get_db
 from app.dependencies.auth_dependency import get_current_user
 from app.dependencies.pagination_dependency import PageParams, get_page_params, set_total_count
 from app.models.user_model import User
-from app.schemas.signal_schema import SignalResponse
+from app.schemas.signal_schema import SignalResponse, SignalScoreResponse
 from app.services import signal_service
 
 router = APIRouter()
@@ -21,5 +21,18 @@ async def get_signals(
     db: AsyncSession = Depends(get_db),
 ) -> list[SignalResponse]:
     results, total = await signal_service.get_signals(db, user.id, market, page)
+    set_total_count(response, total)
+    return results
+
+
+@router.get("/ranking", response_model=list[SignalScoreResponse])
+async def get_signal_ranking(
+    response: Response,
+    market: Market | None = Query(default=None),
+    page: PageParams = Depends(get_page_params),
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> list[SignalScoreResponse]:
+    results, total = await signal_service.get_signal_ranking(db, user.id, market, page)
     set_total_count(response, total)
     return results

@@ -56,3 +56,38 @@ async def test_signals_empty_watchlist_returns_empty(client: AsyncClient, monkey
     assert response.status_code == 200
     assert response.headers["x-total-count"] == "0"
     assert response.json() == []
+
+
+@pytest.mark.asyncio
+async def test_signal_ranking_returns_scored_feed(
+    client: AsyncClient, session: AsyncSession, monkeypatch
+) -> None:
+    monkeypatch.setattr(market_source, "get_ohlcv", lambda ticker, days: make_ohlcv(250))
+    await seed_stock_meta(session, _ROWS)
+    token = await _access_token(client)
+
+    await client.put("/v1/watchlist/005930", headers=_auth(token))
+    response = await client.get("/v1/signals/ranking", headers=_auth(token))
+
+    assert response.status_code == 200
+    assert "x-total-count" in response.headers
+    body = response.json()
+    assert body  # 관심종목이 있으므로 랭킹이 비어 있지 않다.
+    # 와이어 camelCase (api-spec §0).
+    assert "score" in body[0]
+    assert "buySignals" in body[0]
+    assert "sellSignals" in body[0]
+    assert "stock" in body[0]
+
+
+@pytest.mark.asyncio
+async def test_signal_ranking_empty_watchlist_returns_empty(
+    client: AsyncClient, monkeypatch
+) -> None:
+    token = await _access_token(client)
+
+    response = await client.get("/v1/signals/ranking", headers=_auth(token))
+
+    assert response.status_code == 200
+    assert response.headers["x-total-count"] == "0"
+    assert response.json() == []
