@@ -5,6 +5,18 @@
 
 ## 열린 항목
 
+### [2026-06-16] 검증누락 — 수급 실시간 첫 요청 지연 미최적화
+- 위치: app/data/supply_source.py get_recent_supply
+- 설명: 20영업일 수급을 날짜별×2투자자 순차 조회(딜레이 0.6s) → 첫 요청 수십 초. 당일 캐시로 이후 평탄화하나 콜드스타트 느림. 단일 사용자 가정.
+- 위험도: 중
+- 후속: 실측 후 GH Actions cron 일배치 캐시(DB/파일) 전환 검토
+
+### [2026-06-16] 기존부채 — test_get_quote_computes_change 환경 의존
+- 위치: tests/services/test_stock_service.py:49-56
+- 설명: kis_source를 mock 안 해 KIS 키 설정 환경에선 is_delayed=False로 항상 실패. 변경 전 develop에서도 실패 확인(예측 작업과 무관). CI 빨간불 유발.
+- 위험도: 낮음
+- 후속: kis_source.get_quote_kr monkeypatch 또는 is_delayed 단정 제거
+
 ### [2026-06-15] 검증누락 — KIS HTTP 왕복 통합테스트 없음
 - 위치: app/data/kis_source.py get_current_quote / _get_token
 - 설명: _parse_quote 단위테스트와 미설정·비KR None 케이스만 커버. 실제 토큰 발급→현재가 GET의 httpx 왕복과 KIS 응답 스키마(필드명 stck_prpr 등)는 키 부재로 미검증. 필드명이 실제와 다르면 파싱 실패→폴백으로 숨겨짐.

@@ -18,6 +18,8 @@ dependencies = [
     "bcrypt>=4.0,<4.1",
     "httpx>=0.28",
     "finance-datareader>=0.9.202",
+    "xgboost>=3.2.0",
+    "pykrx>=1.2.8",
 ]
 
 [dependency-groups]
