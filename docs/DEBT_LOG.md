@@ -5,6 +5,13 @@
 
 ## 열린 항목
 
+### [2026-06-18] 임시구현 — 거친 간격(주/월봉) 장기 EMA 워밍업 상시 부족
+- 위치: app/indicators/chart.py compute_chart_window / app/services/stock_service.py(_series_to_list), app/constants/market.py CHART_LOOKBACK_DAYS
+- 설명: /indicators interval=1w/1mo 추가에 따라 리샘플 캔들 위에서 EMA를 재계산하는데, 월봉 EMA120은 120개월(≈10년) 원천이 필요하나 일봉 원천을 8년(CHART_LOOKBACK_DAYS)으로 캡함(FE 협의로 부족분 허용). 부족 구간은 _series_to_list의 bfill·0.0 패딩으로 채워져 월봉(때로 주봉) EMA60/120 앞부분이 0/평탄선으로 나갈 수 있음. FE는 주/월봉 EMA·볼린저 오버레이를 다시 켤 예정이라 이 선이 사용자에게 노출됨. 기존 [2026-06-10] 일봉 워밍업 패딩 부채가 거친 간격에선 상시화된 형태.
+- 위험도: 중
+- 후속: 장기선은 워밍업 충족 구간만 노출(NaN 유지→FE가 미표시)하거나 간격별 원천 길이 동적 확장, 또는 거친 간격에서 EMA span 축소 검토
+- 참고: 일봉+range=max는 페이로드 폭주 방지로 최근 5년 캡(CHART_DAILY_MAX_YEARS), 주/월봉 max는 무트리밍 — 의도된 결정.
+
 ### [2026-06-16] 검증누락 — 수급 실시간 첫 요청 지연 미최적화
 - 위치: app/data/supply_source.py get_recent_supply
 - 설명: 20영업일 수급을 날짜별×2투자자 순차 조회(딜레이 0.6s) → 첫 요청 수십 초. 당일 캐시로 이후 평탄화하나 콜드스타트 느림. 단일 사용자 가정.

@@ -97,6 +97,39 @@ async def test_indicators_insufficient_data_returns_422(client: AsyncClient, mon
 
 
 @pytest.mark.asyncio
+async def test_indicators_accepts_interval_and_range(client: AsyncClient, monkeypatch) -> None:
+    monkeypatch.setattr(market_source, "get_ohlcv", lambda ticker, days: make_ohlcv(250))
+    token = await _access_token(client)
+
+    response = await client.get(
+        "/v1/stocks/005930/indicators",
+        params={"interval": "1w", "range": "1y"},
+        headers={"Authorization": f"Bearer {token}"},
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert len(body["candles"]) > 0
+    assert len(body["ema20"]) == len(body["candles"])
+
+
+@pytest.mark.asyncio
+async def test_indicators_rejects_invalid_interval(client: AsyncClient, monkeypatch) -> None:
+    monkeypatch.setattr(market_source, "get_ohlcv", lambda ticker, days: make_ohlcv(250))
+    token = await _access_token(client)
+
+    response = await client.get(
+        "/v1/stocks/005930/indicators",
+        params={"interval": "2d"},
+        headers={"Authorization": f"Bearer {token}"},
+    )
+
+    # 잘못된 쿼리 파라미터는 api-spec §0 envelope로 400 INVALID_REQUEST.
+    assert response.status_code == 400
+    assert response.json()["code"] == "INVALID_REQUEST"
+
+
+@pytest.mark.asyncio
 async def test_market_status_returns_both_markets(client: AsyncClient) -> None:
     token = await _access_token(client)
 

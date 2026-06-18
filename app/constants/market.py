@@ -9,6 +9,11 @@ from app.constants.enums import Market
 CHART_SERIES_LENGTH: Final = 120
 # 지표 워밍업 확보용 과거 조회 일수(달력일). ema120 등 장기선이 반환 구간에서 안정화되도록 충분히 끌어온다.
 INDICATOR_LOOKBACK_DAYS: Final = 500
+# 차트(/indicators) 일봉 원천 조회 일수(달력일). 주/월봉 리샘플 + 장기 EMA 워밍업까지 덮도록 8년 확보.
+# 월봉 EMA120(=120개월≈10년)은 여기서 일부 부족분을 감수한다(워밍업 미충족 구간은 앞쪽이 비거나 짧아짐).
+CHART_LOOKBACK_DAYS: Final = 365 * 8
+# 일봉 + range=max 의 반환 상한(년). 전체 일봉 페이로드 폭주를 막아 최근 5년으로 캡한다.
+CHART_DAILY_MAX_YEARS: Final = 5
 # 유효 봉 최소 개수. 미만이면 422 INSUFFICIENT_DATA (feature-spec §4.2).
 MIN_VALID_BARS: Final = 60
 # quote 계산용 단기 조회 일수(전일 종가 대비 등락 산출).

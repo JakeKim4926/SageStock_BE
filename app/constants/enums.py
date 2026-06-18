@@ -47,3 +47,21 @@ class CrossType(StrEnum):
 class TradeSide(StrEnum):
     BUY = "BUY"
     SELL = "SELL"
+
+
+# 차트 조회 쿼리 파라미터 enum. 위 응답 enum과 달리 와이어 값은 FE 쿼리 문자열 그대로다
+# (GET /stocks/{ticker}/indicators?interval=&range=). 잘못된 값은 FastAPI가 422로 거른다.
+
+
+class Interval(StrEnum):
+    DAILY = "1d"
+    WEEKLY = "1w"
+    MONTHLY = "1mo"
+
+
+class ChartRange(StrEnum):
+    M1 = "1m"
+    M3 = "3m"
+    M6 = "6m"
+    Y1 = "1y"
+    MAX = "max"
