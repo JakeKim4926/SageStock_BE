@@ -5,6 +5,9 @@ name: macro-batch-smoke
 # Phase 1~4의 collector cron이 전부 이 실행 경로를 재사용한다.
 on:
   workflow_dispatch: {}
+  # 임시: workflow_dispatch는 main 등록 전엔 못 쓰므로 이 브랜치 push로 실행. 검증 후 제거.
+  push:
+    branches: [feature/macro-phase0-foundation]
 
 jobs:
   smoke:
