@@ -63,7 +63,7 @@
       unknown 제외 domain의 US basket 커버리지 / ambiguous 키워드가 keywords에 중복 등재 안 됨
 - [ ] config 로더 단위 테스트 (잘못된 domain·필드 누락 시 명시적 에러)
 - [ ] `alembic upgrade head` + `downgrade` 왕복 성공 (로컬 + Neon)
-- [ ] GH Actions 러너에서 스모크 잡 1회 성공 (러너→Neon 직결 + 의존성 설치 검증)
+- [x] GH Actions 러너에서 스모크 잡 1회 성공 (러너→Neon 직결 + 의존성 설치 검증) — 2026-07-04, run 28707687394
 - [ ] rule-check 통과
 
 ---
