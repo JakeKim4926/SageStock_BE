@@ -20,6 +20,8 @@
 - [x] keyword_domain_map: v1은 yaml 직접 로드로 확정 (DB 동기화는 v1.5)
 - [x] 가격 데이터: v1은 EOD/지연 데이터로 확정 (SPEC §13.4) — 구체 어댑터 선택은 Phase 3
 - [x] P1 Alert 채널: **이메일**로 확정 — 발송 방식(SMTP 등)과 자격증명 .env 추가는 Phase 4 착수 전까지
+- [x] 배치 실행 방식 확정 (2026-07-04): GH Actions 러너가 `python -m app.batch...` 직접 실행 + Neon 직결.
+      Render HTTP 미경유 (콜드스타트·100초 타임아웃·스핀다운 회피). SPEC §3 참조
 
 ---
 
@@ -51,6 +53,9 @@
   - [ ] macro_source_freshness
   - [ ] macro_entity_alias_map
 - [ ] Alembic migration 작성
+- [ ] 배치 실행 경로 스모크 테스트 — `.github/workflows/macro-batch-smoke.yml` (workflow_dispatch):
+      checkout → uv sync → `python -m app.batch.smoke` (Neon `SELECT 1` + config 로더 1회).
+      `DATABASE_URL`은 GH repo secret. 이후 Phase 1~4 배치가 전부 이 실행 경로를 재사용
 
 ### 통과 게이트
 
@@ -58,6 +63,7 @@
       unknown 제외 domain의 US basket 커버리지 / ambiguous 키워드가 keywords에 중복 등재 안 됨
 - [ ] config 로더 단위 테스트 (잘못된 domain·필드 누락 시 명시적 에러)
 - [ ] `alembic upgrade head` + `downgrade` 왕복 성공 (로컬 + Neon)
+- [ ] GH Actions 러너에서 스모크 잡 1회 성공 (러너→Neon 직결 + 의존성 설치 검증)
 - [ ] rule-check 통과
 
 ---
@@ -67,6 +73,7 @@
 브랜치: `feature/macro-phase1-collectors`
 공통 패턴: collector(수집) / parser(추출) / 필터(수집 조건) 분리. 실패는 freshness에 FAILED + last_error.
 Phase 1에서는 수동/로컬 실행으로 검증한다 (GH Actions cron 배선은 Phase 4).
+collector 진입점은 `python -m` 실행 가능하게 만든다 — Phase 0 스모크와 동일한 실행 경로.
 
 ### 공통 기반
 
@@ -183,7 +190,8 @@ Phase 1에서는 수동/로컬 실행으로 검증한다 (GH Actions cron 배선
 - [ ] US Pre-open Event Check 생성기 (§5.3)
 - [ ] P1 Event Alert (§5.4) — 발생 조건 5종 + 출력 원칙(매수/매도 문구 금지), 결정된 채널로 발송
 - [ ] Outcome Tracking Job — 체인별 사후 결과 기록 (event_outcomes)
-- [ ] GH Actions cron 배선 — 수집 주기(§4: EDGAR 15~30분, WH 1시간, Defense.gov ≈06:00 KST,
+- [ ] GH Actions cron 배선 — 러너가 collector 모듈 직접 실행 (Render 미경유, Phase 0 스모크 경로 재사용).
+      수집 주기(§4: EDGAR 15~30분, WH 1시간, Defense.gov ≈06:00 KST,
       나머지 일 1~2회) + 리포트 트리거(08:40 / 21:30 KST 이전 완료되도록 여유 포함)
 - [ ] 운영 로그/실패 가시화 (리포트 내 freshness 표시)
 

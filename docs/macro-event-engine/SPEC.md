@@ -78,6 +78,11 @@ Collector와 Router는 위 3개 밖의 타입을 생성해서는 안 된다.
 ```text
 - SageStock_BE 도메인 모듈로 구현한다. (fastapi-structure 레이어 규칙 준수)
 - Collector 배치는 GitHub Actions cron으로 트리거한다. (무료 호스팅 구성: Render + GH Actions + Neon PG)
+- 배치 실행 방식 (2026-07-04 확정): GH Actions 러너가 레포를 checkout해 `python -m app.batch...`
+  진입점을 직접 실행하고 Neon DB에 직결한다. Render 웹서비스는 경유하지 않는다
+  (무료 티어 콜드스타트, 요청 ~100초 타임아웃, 백그라운드 작업 중 스핀다운 회피).
+  로직은 서비스/배치 레이어에 두고 진입점은 얇게 유지한다 — 이후 온디맨드 트리거가
+  필요해지면 같은 서비스를 호출하는 얇은 API 엔드포인트만 추가한다.
 - DB는 기존 Neon PostgreSQL을 공유한다. (macro_* 테이블 prefix)
 - 모든 시간은 KST 기준으로 관리하되, 소스 원문 시각은 source timezone으로 저장 후 KST 변환한다.
 ```

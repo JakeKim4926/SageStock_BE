@@ -1,0 +1,22 @@
+name: macro-batch-smoke
+
+# macro-event-engine 배치 실행 경로 스모크 (PLAN Phase 0 게이트).
+# 러너가 코드를 직접 실행해 Neon에 직결되는지 확인한다 — Render 미경유 (SPEC §3).
+# Phase 1~4의 collector cron이 전부 이 실행 경로를 재사용한다.
+on:
+  workflow_dispatch: {}
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install deps
+        run: pip install uv && uv sync --frozen
+      - name: Run smoke
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: uv run python -m app.batch.smoke
