@@ -13,6 +13,7 @@ Before implementing:
 - If multiple interpretations exist, present them - don't pick silently.
 - If a simpler approach exists, say so. Push back when warranted.
 - If something is unclear, stop. Name what's confusing. Ask.
+- Do not write, modify, execute, or create code unless I explicitly approve the coding step first.
 
 ## 2. Simplicity First
 
