@@ -33,6 +33,9 @@ class Settings(BaseSettings):
     # SEC EDGAR — 연락 이메일 포함 User-Agent 요구 (macro collector용, SPEC §4).
     SEC_EDGAR_USER_AGENT: str = "SageStock wer1915@gmail.com"
 
+    # SAM.gov Opportunities API 키 (macro collector용). 미설정 시 SAM collector는 실패로 기록.
+    SAM_API_KEY: str = ""
+
     BACKEND_CORS_ORIGINS: list[str] = []
 
     model_config = SettingsConfigDict(

@@ -109,12 +109,19 @@ collector 진입점은 `python -m` 실행 가능하게 만든다 — Phase 0 스
         — item 판정은 SGML 헤더 ITEM INFORMATION 매핑. counterparty_named 검출은 v1
         미구현(금액/기관/award로만 판정 — 보수적). 실수집 2026-07-05: 피드 97건 중
         24건 수집(전부 1.01/L4), 8.01은 안전장치로 0건 — 단독 키워드 수집 0건 확인
-- [ ] **SAM.gov** (§6.1)
-  - [ ] Opportunities API, opportunity_type 4종
-  - [ ] 조건 A~D 필터 + estimated_value 부재 규칙 (agency 단독 수집 금지)
-  - [ ] agency 계층 매칭 (department + sub-tier)
-  - [ ] notice 갱신 처리: type 전환=승격, 동일 type 재게시=업데이트
-  - [ ] 필수 저장 필드 12종
+- [x] **SAM.gov** (§6.1)
+  - [x] Opportunities API, opportunity_type 4종 (ptype=r,p,o,a + offset 페이지네이션 max 3p)
+  - [x] 조건 A~D 필터 + estimated_value 부재 규칙 (agency 단독 수집 금지)
+        — 임계값·agency 목록은 rules yaml에서 로드. summary 기반 strong 기준(§6.1 3안)은
+        v1 미적용(설명 본문이 별도 API·쿼터 소모 → title만, 보수적)
+  - [x] agency 계층 매칭 (department + sub-tier) — fullParentPathName 상위 2계층만
+  - [x] notice 갱신 처리: type 전환=승격, 동일 type 재게시=업데이트
+        — 재게시=noticeId upsert 업데이트, type 전환은 새 notice→새 이벤트로 들어와
+        Phase 2 체인(agency_code+solicitation_number)에서 승격
+  - [x] 필수 저장 필드 12종
+        — 실수집 2026-07-05(7일 백필): 67건 저장(award 61 L5·sol 3·pre 1·ss 2),
+        agency 단독 수집 0·필수필드 누락 0 확인. 톱 샘플 DOE HALEU $1.07B.
+        관찰: title 기준 strong keyword 매칭률 ~0.1% — 운영 검증 키워드 조정 대상
 - [ ] **USAspending** (§6.2) — 신규 award $50M+ / modification은 delta $10M+ 체인 반영만
 - [ ] **Defense.gov Contracts** (§6.7) — HTML 파싱, 항목 분리, 금액·수주사·기관 추출(3/4 필드),
       $50M+ 또는 $7.5M+ strong keyword, modification 구분
