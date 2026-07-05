@@ -105,7 +105,10 @@ collector 진입점은 `python -m` 실행 가능하게 만든다 — Phase 0 스
         — 주의: 2024-12 이후 EDGAR 폼 타입은 SCHEDULE 13D/13G(+/A). amendment Δ는
         DB의 직전 관찰(filer+subject+family) 대비, 직전 없으면 첫 관찰로 수집.
         실수집 2026-07-05: 67건(13D 43·13G 24) Neon 저장, freshness FRESH, 샘플 확인
-  - [ ] 8-K: Item 1.01 / 조건부 8.01 (strong signal 2개+, 단독 키워드 거부)
+  - [x] 8-K: Item 1.01 / 조건부 8.01 (strong signal 2개+, 단독 키워드 거부)
+        — item 판정은 SGML 헤더 ITEM INFORMATION 매핑. counterparty_named 검출은 v1
+        미구현(금액/기관/award로만 판정 — 보수적). 실수집 2026-07-05: 피드 97건 중
+        24건 수집(전부 1.01/L4), 8.01은 안전장치로 0건 — 단독 키워드 수집 0건 확인
 - [ ] **SAM.gov** (§6.1)
   - [ ] Opportunities API, opportunity_type 4종
   - [ ] 조건 A~D 필터 + estimated_value 부재 규칙 (agency 단독 수집 금지)
