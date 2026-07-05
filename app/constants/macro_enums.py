@@ -133,3 +133,13 @@ class OutcomeLabel(StrEnum):
     DELAYED = "DELAYED"
     FALSE_POSITIVE = "FALSE_POSITIVE"
     UNKNOWN = "UNKNOWN"
+
+
+class OutcomeHorizon(StrEnum):
+    """SPEC §16 event_outcomes.horizon — 사후 측정 기간."""
+
+    D1 = "1D"
+    D3 = "3D"
+    D5 = "5D"
+    D10 = "10D"
+    D20 = "20D"

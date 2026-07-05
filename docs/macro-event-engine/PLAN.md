@@ -46,16 +46,16 @@
         — 35개 법인/50 alias, ticker·CIK는 SEC company_tickers.json 대조 검증(2026-07-05)
   - [ ] v1 목표 100~200개 — 운영 검증에서 alias 매핑률 측정 후 확장 (SPEC §11.4)
 - [x] config 로더 (`app/services/macro_events/config_loader.py`) — yaml/csv 파싱 + 스키마 검증
-- [ ] SQLAlchemy 모델 (`app/models/macro_*.py`) — SPEC §16:
-  - [ ] macro_events (시각 필드 6종 §13.1, domain 필드 5종 §9.4, linked_entities JSONB 포함)
-  - [ ] macro_event_chains
-  - [ ] macro_event_outcomes (§16 최소 필드: horizon, price/benchmark/excess_return,
+- [x] SQLAlchemy 모델 (`app/models/macro_*.py`) — SPEC §16:
+  - [x] macro_events (시각 필드 6종 §13.1, domain 필드 5종 §9.4, linked_entities JSONB 포함)
+  - [x] macro_event_chains
+  - [x] macro_event_outcomes (§16 최소 필드: horizon, price/benchmark/excess_return,
         outcome_label, score_version 포함 — 점수 보정 원료, Phase 0 DDL에 필수)
-  - [ ] macro_market_reaction_snapshots (basket_mapping_status/reason 포함 §10.4)
-  - [ ] macro_event_sources (소스 레지스트리 §4 시드 데이터 포함)
-  - [ ] macro_source_freshness
-  - [ ] macro_entity_alias_map
-- [ ] Alembic migration 작성
+  - [x] macro_market_reaction_snapshots (basket_mapping_status/reason 포함 §10.4)
+  - [x] macro_event_sources (소스 레지스트리 §4 시드 데이터 포함)
+  - [x] macro_source_freshness
+  - [x] macro_entity_alias_map
+- [x] Alembic migration 작성 — `0004_create_macro_event_tables.py` (시드 8행 포함)
 - [x] 배치 실행 경로 스모크 테스트 — `.github/workflows/macro-batch-smoke.yml` (workflow_dispatch):
       checkout → uv sync → `python -m app.batch.smoke` (Neon `SELECT 1` + config 로더 1회).
       `DATABASE_URL`은 GH repo secret. 이후 Phase 1~4 배치가 전부 이 실행 경로를 재사용
@@ -66,7 +66,9 @@
 - [x] 정합성 pytest (SPEC §10.5): keyword domain ⊆ enum / basket domain ⊆ enum /
       unknown 제외 domain의 US basket 커버리지 / ambiguous 키워드가 keywords에 중복 등재 안 됨
 - [x] config 로더 단위 테스트 (잘못된 domain·필드 누락 시 명시적 에러)
-- [ ] `alembic upgrade head` + `downgrade` 왕복 성공 (로컬 + Neon)
+- [x] `alembic upgrade head` + `downgrade` 왕복 성공 (로컬 + Neon)
+      — 2026-07-05 Neon에서 0003→0004→0003→0004 왕복, 시드 8행·JSONB 타입 확인.
+      로컬 PG는 없음 — sqlite는 conftest create_all로 전체 DDL 생성 검증(109 테스트)
 - [x] GH Actions 러너에서 스모크 잡 1회 성공 (러너→Neon 직결 + 의존성 설치 검증) — 2026-07-04, run 28707687394
 - [ ] rule-check 통과
 
