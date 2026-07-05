@@ -3,7 +3,7 @@ import pytest
 
 from app.constants.enums import ChartRange, Interval, Market
 from app.core.exceptions import AppError
-from app.data import market_source
+from app.data import kis_source, market_source
 from app.services import stock_service
 from tests.conftest import make_ohlcv
 
@@ -84,6 +84,11 @@ async def test_get_indicators_not_found(monkeypatch) -> None:
 
 @pytest.mark.asyncio
 async def test_get_quote_computes_change(monkeypatch) -> None:
+    # 로컬 .env에 KIS 키가 있으면 실 API를 타 is_delayed=False가 되므로 차단.
+    async def no_quote(ticker: str) -> None:
+        return None
+
+    monkeypatch.setattr(kis_source, "get_current_quote", no_quote)
     monkeypatch.setattr(market_source, "get_ohlcv", lambda ticker, days: make_ohlcv(10))
 
     quote = await stock_service.get_quote("005930")
