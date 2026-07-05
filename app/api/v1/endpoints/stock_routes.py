@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, Query, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.constants.enums import Market
+from app.constants.enums import ChartRange, Interval, Market
 from app.core.database import get_db
 from app.dependencies.auth_dependency import get_current_user
 from app.dependencies.pagination_dependency import PageParams, get_page_params, set_total_count
@@ -48,6 +48,8 @@ async def get_quote(
 @router.get("/{ticker}/indicators", response_model=IndicatorSetResponse)
 async def get_indicators(
     ticker: str,
+    interval: Interval = Query(default=Interval.DAILY),
+    range_: ChartRange = Query(default=ChartRange.M6, alias="range"),
     _: User = Depends(get_current_user),
 ) -> IndicatorSetResponse:
-    return await stock_service.get_indicators(ticker)
+    return await stock_service.get_indicators(ticker, interval, range_)

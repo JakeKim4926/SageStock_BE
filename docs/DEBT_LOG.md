@@ -5,6 +5,37 @@
 
 ## 열린 항목
 
+### [2026-07-05] 후속분리 — event_type_rules.yaml 심층 스키마 미검증
+- 위치: app/services/macro_events/config_loader.py EventTypeRules (event_types·chain_promotion 필드)
+- 설명: 로더가 소스별 수집 조건(SPEC §6)·체인 승격 규칙은 dict 통과만 시킴. 최상위 구조·taxonomy·fuzzy 금지·clamp만 검증. 소비자(Phase 1~2 collector/서비스)가 없어 깊은 검증은 스펙 중복이라 의도적으로 미룸 — 오타가 Phase 1 구현 때까지 잠복 가능.
+- 위험도: 중
+- 후속: Phase 1~2에서 각 소비자가 해당 섹션 파싱 모델을 갖출 때 검증 추가
+
+### [2026-07-05] 검증누락 — GH Actions 러너에서 config 로더 포함 스모크 미실행
+- 위치: app/batch/smoke.py / .github/workflows/macro-batch-smoke.yml
+- 설명: smoke에 config 로드 1회를 추가했지만 러너 재실행은 안 함(로컬만 검증). 러너 환경의 경로/인코딩 차이가 있으면 Phase 1 첫 배치에서 드러남.
+- 위험도: 낮음
+- 후속: develop→main 반영 후 workflow_dispatch 1회 실행 (Phase 1 착수 전)
+
+### [2026-07-05] 후속분리 — macro_entity_alias_map 테이블 CSV 동기화 미구현
+- 위치: alembic/versions/0004_create_macro_event_tables.py (빈 테이블) / config/macro_events/entity_alias_map.csv
+- 설명: DDL은 만들었지만 CSV→DB 적재 로직이 없어 테이블이 빈 상태. v1은 로더가 CSV 직접 읽으므로 당장 무해하나, Phase 2 Entity Resolution이 DB를 볼지 CSV를 볼지 결정 필요.
+- 위험도: 낮음
+- 후속: Phase 2 착수 시 결정 — CSV 직접 로드 유지면 테이블 용도(이력 관리) 명시, DB 조회면 시드 적재 배치 추가
+
+### [2026-06-18] 임시구현 — 거친 간격(주/월봉) 장기 EMA 워밍업 상시 부족
+- 위치: app/indicators/chart.py compute_chart_window / app/services/stock_service.py(_series_to_list), app/constants/market.py CHART_LOOKBACK_DAYS
+- 설명: /indicators interval=1w/1mo 추가에 따라 리샘플 캔들 위에서 EMA를 재계산하는데, 월봉 EMA120은 120개월(≈10년) 원천이 필요하나 일봉 원천을 8년(CHART_LOOKBACK_DAYS)으로 캡함(FE 협의로 부족분 허용). 부족 구간은 _series_to_list의 bfill·0.0 패딩으로 채워져 월봉(때로 주봉) EMA60/120 앞부분이 0/평탄선으로 나갈 수 있음. FE는 주/월봉 EMA·볼린저 오버레이를 다시 켤 예정이라 이 선이 사용자에게 노출됨. 기존 [2026-06-10] 일봉 워밍업 패딩 부채가 거친 간격에선 상시화된 형태.
+- 위험도: 중
+- 후속: 장기선은 워밍업 충족 구간만 노출(NaN 유지→FE가 미표시)하거나 간격별 원천 길이 동적 확장, 또는 거친 간격에서 EMA span 축소 검토
+- 참고: 일봉+range=max는 페이로드 폭주 방지로 최근 5년 캡(CHART_DAILY_MAX_YEARS), 주/월봉 max는 무트리밍 — 의도된 결정.
+
+### [2026-06-16] 검증누락 — 수급 실시간 첫 요청 지연 미최적화
+- 위치: app/data/supply_source.py get_recent_supply
+- 설명: 20영업일 수급을 날짜별×2투자자 순차 조회(딜레이 0.6s) → 첫 요청 수십 초. 당일 캐시로 이후 평탄화하나 콜드스타트 느림. 단일 사용자 가정.
+- 위험도: 중
+- 후속: 실측 후 GH Actions cron 일배치 캐시(DB/파일) 전환 검토
+
 ### [2026-06-15] 검증누락 — KIS HTTP 왕복 통합테스트 없음
 - 위치: app/data/kis_source.py get_current_quote / _get_token
 - 설명: _parse_quote 단위테스트와 미설정·비KR None 케이스만 커버. 실제 토큰 발급→현재가 GET의 httpx 왕복과 KIS 응답 스키마(필드명 stck_prpr 등)는 키 부재로 미검증. 필드명이 실제와 다르면 파싱 실패→폴백으로 숨겨짐.
@@ -22,12 +53,6 @@
 - 설명: 매 요청·관심종목 수만큼 KIS를 호출하고 결과 캐시 없음. KIS를 fdr보다 선행 호출해, KIS가 느리면 타임아웃(5s)만큼 응답 지연. 1인 앱·소규모 watchlist엔 충분하나 폴링 주기↑/유니버스↑ 시 호출량·레이턴시 부담.
 - 위험도: 중
 - 후속: 단기 TTL 캐시(수 초) 또는 동시성 제한 도입
-
-### [2026-06-11] 검증누락 — stock_meta 배치 end-to-end 미실행
-- 위치: app/batch/refresh_stock_meta.py main
-- 설명: _persist(영속) 경로는 in-memory SQLite로 단위 검증했으나, 실제 `python -m app.batch.refresh_stock_meta`(fdr 리스팅 다운로드→Postgres replace_all)는 DB·네트워크 부재로 이 환경에서 실행 못 함.
-- 위험도: 중
-- 후속: DB 연결 환경에서 1회 실행해 행 수·소요시간 확인(콜드 ~15s)
 
 ### [2026-06-11] 구조변경 — 서빙 메타가 stock_meta DB 선행 적재에 의존
 - 위치: app/services/stock_meta_service.py / market_source.get_listing_index는 이제 배치 전용
@@ -66,6 +91,14 @@
 - 후속: [tool.mypy] ignore_missing_imports 또는 types-passlib/pandas-stubs 도입
 
 ## 해결됨
+
+### [2026-06-16] 기존부채 — test_get_quote_computes_change 환경 의존 (2026-07-05 해결)
+- 위치: tests/services/test_stock_service.py
+- 설명: kis_source를 mock 안 해 KIS 키 설정 환경에선 실 API 호출 — 토큰 발급(분당 1회 제한) 성공 여부에 따라 결과가 갈리는 시간 의존 플레이크였음. test_stock_routes.py의 no_quote mock 패턴을 동일 적용해 해결 (커밋 9ead3ad).
+
+### [2026-06-11] 검증누락 — stock_meta 배치 end-to-end 미실행 (2026-06-15 해결)
+- 위치: app/batch/refresh_stock_meta.py / .github/workflows/refresh-stock-meta.yml
+- 설명: 운영 Neon에 수동 1회 적재(~9.5천종목) + GitHub Actions 워크플로 수동 실행으로 end-to-end 검증 완료(1m28s, replace_all). 일배치 cron(매일 03:00 KST)도 등록 — "배포 파이프라인에 cron 등록" 후속도 함께 해소.
 
 ### [2026-06-10] 하드코딩 — Quote.isDelayed 항상 True (KIS 실시간 도입에서 부분 해결)
 - 위치: app/services/stock_service.py get_quote / app/data/kis_source.py

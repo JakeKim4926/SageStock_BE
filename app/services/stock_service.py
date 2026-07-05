@@ -3,19 +3,29 @@ import pandas as pd  # type: ignore[import-untyped]
 from fastapi.concurrency import run_in_threadpool
 
 from app.constants import error_codes
-from app.constants.enums import CrossType, Market, SignalType
+from app.constants.enums import ChartRange, CrossType, Interval, Market, SignalType
 from app.constants.market import (
-    INDICATOR_LOOKBACK_DAYS,
+    CHART_DAILY_MAX_YEARS,
+    CHART_LOOKBACK_DAYS,
     IS_DELAYED_DEFAULT,
     MIN_VALID_BARS,
     QUOTE_LOOKBACK_DAYS,
 )
 from app.core.exceptions import AppError
 from app.data import kis_source, market_source
-from app.indicators.chart import compute_window
+from app.indicators.chart import compute_chart_window
 from app.schemas.indicator_schema import CandleResponse, CrossMarkerResponse, IndicatorSetResponse
 from app.schemas.stock_schema import QuoteResponse
 from app.services.signal_detector import detect_signals
+
+# range → 마지막 캔들 기준 거슬러 볼 기간. MAX 는 트리밍 없음(전체).
+_RANGE_OFFSETS: dict[ChartRange, pd.DateOffset | None] = {
+    ChartRange.M1: pd.DateOffset(months=1),
+    ChartRange.M3: pd.DateOffset(months=3),
+    ChartRange.M6: pd.DateOffset(months=6),
+    ChartRange.Y1: pd.DateOffset(years=1),
+    ChartRange.MAX: None,
+}
 
 
 async def get_quote(ticker: str) -> QuoteResponse:
@@ -60,8 +70,13 @@ async def get_quote(ticker: str) -> QuoteResponse:
     )
 
 
-async def get_indicators(ticker: str) -> IndicatorSetResponse:
-    df = await run_in_threadpool(market_source.get_ohlcv, ticker, INDICATOR_LOOKBACK_DAYS)
+async def get_indicators(
+    ticker: str,
+    interval: Interval = Interval.DAILY,
+    range_: ChartRange = ChartRange.M6,
+) -> IndicatorSetResponse:
+    # 간격/범위 무관하게 티커당 동일한 일봉 원천을 끌어와(캐시 1엔트리 공유) 간격별로 재집계한다.
+    df = await run_in_threadpool(market_source.get_ohlcv, ticker, CHART_LOOKBACK_DAYS)
 
     if df.empty:
         raise AppError(error_codes.DATA_NOT_FOUND, f"데이터가 없습니다: {ticker}", 404)
@@ -74,11 +89,25 @@ async def get_indicators(ticker: str) -> IndicatorSetResponse:
             422,
         )
 
-    return _build_indicator_set(ticker, df)
+    return _build_indicator_set(ticker, df, interval, range_)
 
 
-def _build_indicator_set(ticker: str, df: pd.DataFrame) -> IndicatorSetResponse:
-    window = compute_window(df)
+def _resolve_trim_offset(interval: Interval, range_: ChartRange) -> pd.DateOffset | None:
+    # 일봉 전체는 페이로드가 커서 최근 N년으로 캡한다. 주/월봉 전체는 캔들 수가 적어 그대로 둔다.
+    if range_ is ChartRange.MAX and interval is Interval.DAILY:
+        return pd.DateOffset(years=CHART_DAILY_MAX_YEARS)
+
+    return _RANGE_OFFSETS[range_]
+
+
+def _build_indicator_set(
+    ticker: str,
+    df: pd.DataFrame,
+    interval: Interval,
+    range_: ChartRange,
+) -> IndicatorSetResponse:
+    trim_offset = _resolve_trim_offset(interval, range_)
+    window = compute_chart_window(df, interval, trim_offset)
 
     candles = [
         CandleResponse(

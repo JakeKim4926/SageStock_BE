@@ -18,6 +18,8 @@ dependencies = [
     "bcrypt>=4.0,<4.1",
     "httpx>=0.28",
     "finance-datareader>=0.9.202",
+    "xgboost>=3.2.0",
+    "pykrx>=1.2.8",
 ]
 
 [dependency-groups]
@@ -27,6 +29,7 @@ dev = [
     "aiosqlite>=0.20",
     "ruff>=0.8",
     "mypy>=1.13",
+    "types-pyyaml>=6.0.12.20260518",
 ]
 
 [tool.ruff]

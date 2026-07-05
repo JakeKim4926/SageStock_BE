@@ -1,0 +1,284 @@
+# Macro Event Engine — 이벤트 타입/수집/체인/점수 규칙
+# 정본 명세: docs/macro-event-engine/SPEC.md (§6 수집, §7 체인, §8 확정성, §15 점수)
+# 규칙 값의 정본은 이 파일이다. SPEC과 어긋나면 구현을 멈추고 보고한다.
+
+version: macro_event_rules_v1.0.1
+
+# ---------------------------------------------------------------------------
+# v1 taxonomy — 이 3개 밖의 event_type 생성 금지 (SPEC §2.1)
+# ---------------------------------------------------------------------------
+event_types_allowed:
+  - MEGA_CONTRACT
+  - PRESIDENTIAL_ACTION
+  - INSTITUTIONAL_CAPITAL_SHIFT
+
+# ---------------------------------------------------------------------------
+# 점수 (SPEC §15)
+# ---------------------------------------------------------------------------
+score:
+  clamp_total:
+    min: 0
+    max: 100
+
+  clamp_components:
+    SourceAuthority: [0, 20]
+    EventMagnitude: [0, 20]
+    Certainty: [0, 15]
+    Novelty: [0, 15]
+    MarketLatency: [-10, 15]
+    CrossMarketImpact: [0, 10]
+    FollowThroughPotential: [0, 10]
+    NoisePenalty: [-20, 0]
+    AmbiguityPenalty: [-20, 0]
+
+  priority_bands:
+    P1: [85, 100]
+    P2: [70, 84]
+    P3: [50, 69]
+    P4: [0, 49]
+
+# ---------------------------------------------------------------------------
+# Chain 규칙 (SPEC §7) — 명시적 식별자 없으면 체인 생성 금지
+# ---------------------------------------------------------------------------
+chain_rules:
+  SEC_13D_13G:
+    chain_key_fields: [filer_cik, subject_company_cik, form_family]
+    event_unique_id: accession_number
+    allow_fuzzy_matching: false
+
+  SEC_FORM4:
+    chain_key_fields: [issuer_cik, reporting_owner_cik, form_family]
+    event_unique_id: accession_number
+    allow_fuzzy_matching: false
+    # 반복 관찰용 체인. LEAD→CONFIRMATION 확정성 승격 체인으로 사용 금지 (SPEC §7.4)
+    promotion_chain: false
+
+  SEC_8K:
+    chain_key_fields: [issuer_cik, item_code, counterparty_id]
+    fallback_when_no_counterparty: no_chain   # 사실상 미연결 (SPEC §7.2)
+    event_unique_id: accession_number
+    allow_fuzzy_matching: false
+
+  OPENDART_SUPPLY_CONTRACT:
+    chain_key_fields:
+      - corp_code
+      - report_family
+      - counterparty_name_normalized
+      - contract_name_normalized
+    require_all_key_fields: true              # 이름 없으면 자동 연결 금지
+    event_unique_id: receipt_no
+    allow_fuzzy_matching: false
+
+  OPENDART_CORRECTION:
+    chain_key_fields: [original_receipt_no]
+    fallback_when_missing: no_chain
+    event_unique_id: receipt_no
+    allow_fuzzy_matching: false
+
+  OPENDART_OWNERSHIP:
+    chain_key_fields: [corp_code, reporter_id_or_name, report_family]
+    event_unique_id: receipt_no
+    allow_fuzzy_matching: false
+
+  SAM_GOV:
+    chain_key_fields: [agency_code, solicitation_number]
+    event_unique_id: notice_id
+    allow_fuzzy_matching: false
+
+  USASPENDING:
+    chain_key_fields: [award_id]              # 또는 contract_award_unique_key
+    alt_chain_key_fields: [contract_award_unique_key]
+    cross_source_link:                        # SAM.gov 연결 — 양쪽에 명시된 경우만 (SPEC §7.2)
+      fields: [agency_code, solicitation_number]
+    allow_fuzzy_matching: false
+
+  DEFENSE_CONTRACTS:
+    chain_key_fields: [contract_number]       # 명시적 계약번호 있을 때만
+    fallback_when_missing: active_unlinked
+    allow_fuzzy_matching: false
+
+  WHITE_HOUSE:
+    chain_key_fields: [presidential_document_number]  # EO 번호 또는 Proclamation 번호 (SPEC §7.3)
+    fallback_when_missing: active_unlinked            # Memorandum은 대부분 영구 미연결(중복 허용)
+    allow_fuzzy_matching: false
+
+  FEDERAL_REGISTER:
+    chain_key_fields: [presidential_document_number]
+    fallback_chain_key_fields: [federal_register_document_number]
+    allow_fuzzy_matching: false
+
+chain_promotion:
+  # LEAD → CONFIRMATION → OUTCOME 승격 시 highest_certainty_level 갱신 (SPEC §7.4)
+  PRESIDENTIAL_ACTION:
+    from: US_WHITE_HOUSE
+    to: US_FEDERAL_REGISTER
+    required_shared_fields: [presidential_document_number]
+  MEGA_CONTRACT_PROCUREMENT:
+    from: US_SAM_GOV
+    to: US_USASPENDING
+    required_shared_fields: [agency_code, solicitation_number]
+
+# ---------------------------------------------------------------------------
+# 이벤트 타입별 소스·수집 조건 (SPEC §6) / certainty 기본값 (SPEC §8)
+# ---------------------------------------------------------------------------
+event_types:
+
+  MEGA_CONTRACT:
+    sources:
+
+      US_SAM_GOV:
+        source_role: LEAD_SOURCE
+        opportunity_types:
+          sources_sought:   { certainty_level: L2 }
+          pre_solicitation: { certainty_level: L3 }
+          solicitation:     { certainty_level: L3 }
+          award_notice:     { certainty_level: L5 }
+        collect_if:
+          any_of:
+            - estimated_value_usd_gte: 50000000                       # 조건 A
+            - all_of:                                                 # 조건 B
+                - agency_in: [NASA, DoD, DOE, DARPA]
+                - estimated_value_usd_gte: 10000000
+            - all_of:                                                 # 조건 C
+                - agency_in: [NASA, DoD, DOE, DARPA]
+                - strong_domain_keyword_match: true
+            - all_of:                                                 # 조건 D
+                - strong_domain_keyword_match: true
+                - estimated_value_usd_gte: 10000000
+        estimated_value_missing:
+          collect_if:
+            all_of:
+              - agency_in: [NASA, DoD, DOE, DARPA]
+              - strong_domain_keyword_match: true
+        do_not_collect_if:
+          - agency_only_match_without_amount_or_domain
+          - solicitation_number_only_match
+        # agency 매칭은 department + sub-tier 계층 기준 (SPEC §6.1)
+        agency_match_mode: department_and_subtier
+        # 갱신 처리: type 전환=체인 승격, 동일 type 재게시/amendment=기존 이벤트 업데이트
+        amendment_handling:
+          type_transition: promote_in_chain
+          same_type_repost: update_existing_event
+        required_storage_fields:
+          - solicitation_number
+          - notice_id
+          - agency_code
+          - agency_name
+          - posted_date
+          - response_deadline
+          - opportunity_type
+          - estimated_value
+          - title
+          - summary
+          - source_url
+          - publicly_observable_at
+
+      US_USASPENDING:
+        source_role: [CONFIRMATION_SOURCE, OUTCOME_SOURCE]
+        certainty_level: L6
+        collect_if:
+          new_award_only: true
+          min_award_amount_usd: 50000000
+        modification_handling:
+          create_new_event: false
+          update_existing_chain_only: true
+          min_obligated_amount_delta_usd: 10000000
+          drop_if_no_explicit_link: true
+
+      US_SEC_8K:
+        source_role: CONFIRMATION_SOURCE
+        items:
+          "1.01":
+            certainty_level: L4
+            l5_candidate_if: [counterparty_named, amount_stated, period_stated]
+          "8.01":
+            certainty_level: L3
+            collect_if:
+              min_strong_signal_keywords: 2
+              require_one_of: [amount_stated, counterparty_named, agency_named, award_language]
+            strong_signal_keywords:
+              - award
+              - definitive agreement
+              - government contract
+              - NASA
+              - DoD
+              - DOE
+              - contract value
+              - purchase order
+              - supply agreement
+              - multi-year
+            never_collect_on_single_keyword: [contract, government, agreement]
+        excluded_items: ["1.02", "2.01", "2.02", "3.02", "5.02", "7.01"]
+
+      US_DEFENSE_CONTRACTS:
+        source_role: [LEAD_SOURCE, CONFIRMATION_SOURCE]
+        certainty_level: L5
+        collect_if:
+          any_of:
+            - amount_usd_gte: 50000000
+            - all_of:
+                - amount_usd_gte: 7500000
+                - strong_domain_keyword_match: true
+        magnitude_certainty_adjust_flags:
+          - indefinite_delivery
+          - ceiling_value
+          - modification
+        modification_handling:
+          linkable: follow_through_in_chain
+          not_linkable: store_as_active_unlinked
+        min_extracted_fields: 3   # amount / awardee / agency / description 중
+
+      KR_OPENDART_SUPPLY_CONTRACT:
+        source_role: CONFIRMATION_SOURCE
+        certainty_level: L5
+        collect_if:
+          min_contract_amount_krw: 50000000000
+          min_contract_to_sales_ratio: 0.10
+
+  PRESIDENTIAL_ACTION:
+    sources:
+
+      US_WHITE_HOUSE:
+        source_role: LEAD_SOURCE
+        certainty_level: L4
+        document_types: [Executive Order, Presidential Memorandum, Proclamation]
+        parse_failure_handling: no_event_or_partial   # 파싱 실패 시 이벤트 생성 금지 또는 PARTIAL
+
+      US_FEDERAL_REGISTER:
+        source_role: CONFIRMATION_SOURCE
+        certainty_level: L4
+        document_types: [Executive Order, Presidential Memorandum, Proclamation]
+        keyword_match:
+          match_fields: [title, abstract, summary]
+          case_sensitive: false
+          word_boundary: true
+
+  INSTITUTIONAL_CAPITAL_SHIFT:
+    sources:
+
+      US_SEC_FORM4:
+        source_role: CONFIRMATION_SOURCE
+        certainty_level: L5
+        collect_if:
+          transaction_codes: [P]
+          min_transaction_value_usd: 1000000
+          allowed_roles: [officer, director, ten_percent_owner]
+          exclude: [option_exercise, grant, automatic_transaction]
+
+      US_SEC_13D_13G:
+        source_role: CONFIRMATION_SOURCE
+        certainty_level: L5
+        collect_if:
+          collect_new_13d: true
+          collect_new_13g: true
+          min_amendment_ownership_change_pct_point: 1.0
+        batch_surge_policy:            # 13G 분기 마감 급증 (SPEC §6.5)
+          daily_processing_cap_allowed: true
+          low_score_threshold: 70      # 미만은 리포트 하단/별도 보관
+
+      KR_OPENDART_OWNERSHIP:
+        source_role: CONFIRMATION_SOURCE
+        certainty_level: L5
+        collect_if:
+          collect_new_5pct_report: true
+          min_ownership_change_pct_point: 1.0
