@@ -9,30 +9,30 @@
 확산 전 포착이며 publicly_observable_at = filing accepted time (SPEC §4).
 """
 import logging
-import re
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass
-from datetime import datetime
 from typing import Any
-from zoneinfo import ZoneInfo
+
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.batch.macro_collectors.base import MacroCollector
-from app.batch.macro_collectors.edgar_client import EdgarClient, EdgarFiling
+from app.batch.macro_collectors.edgar_client import (
+    EdgarClient,
+    EdgarFiling,
+    extract_acceptance_datetime,
+    iter_embedded_xml,
+)
 from app.constants.macro_enums import (
     CertaintyLevel,
     LatencyReferenceType,
     MacroEventType,
 )
 from app.services.macro_events.config_loader import load_event_type_rules
-from app.services.macro_events.normalize import NormalizedMacroEvent, to_kst
+from app.services.macro_events.normalize import NormalizedMacroEvent
 
 logger = logging.getLogger(__name__)
 
 _FORM_TYPE = "4"
-# EDGAR ACCEPTANCE-DATETIME은 미 동부시각 (예: 20260703212345)
-_EDGAR_TIMEZONE = ZoneInfo("America/New_York")
-_ACCEPTANCE_PATTERN = re.compile(r"<ACCEPTANCE-DATETIME>\s*(\d{14})")
-_OWNERSHIP_XML_PATTERN = re.compile(r"<XML>\s*(.*?)\s*</XML>", re.DOTALL)
 
 
 @dataclass(frozen=True)
@@ -55,16 +55,8 @@ def _collect_rules() -> dict[str, Any]:
     return dict(sources["US_SEC_FORM4"])
 
 
-def extract_acceptance_datetime(filing_text: str) -> datetime | None:
-    match = _ACCEPTANCE_PATTERN.search(filing_text)
-    if match is None:
-        return None
-    accepted = datetime.strptime(match.group(1), "%Y%m%d%H%M%S")
-    return to_kst(accepted, source_tz=_EDGAR_TIMEZONE)
-
-
 def extract_ownership_xml(filing_text: str) -> str | None:
-    for candidate in _OWNERSHIP_XML_PATTERN.findall(filing_text):
+    for candidate in iter_embedded_xml(filing_text):
         if "<ownershipDocument" in candidate:
             return candidate
     return None
@@ -150,7 +142,7 @@ class EdgarForm4Collector(MacroCollector):
         self._feed_count = feed_count
         self._rules = _collect_rules()
 
-    async def collect(self) -> list[NormalizedMacroEvent]:
+    async def collect(self, session: AsyncSession) -> list[NormalizedMacroEvent]:
         events: list[NormalizedMacroEvent] = []
         async with EdgarClient() as client:
             filings = await client.fetch_recent_filings(_FORM_TYPE, count=self._feed_count)

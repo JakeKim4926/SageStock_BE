@@ -1,7 +1,9 @@
 """EDGAR Form 4 파서·필터 테스트 (SPEC §6.4) — 네트워크 미사용."""
-from app.batch.macro_collectors.edgar_client import parse_getcurrent_feed
-from app.batch.macro_collectors.edgar_form4_collector import (
+from app.batch.macro_collectors.edgar_client import (
     extract_acceptance_datetime,
+    parse_getcurrent_feed,
+)
+from app.batch.macro_collectors.edgar_form4_collector import (
     extract_ownership_xml,
     parse_form4,
     passes_collect_filter,
@@ -158,7 +160,7 @@ GETCURRENT_FEED = """<?xml version="1.0" encoding="ISO-8859-1"?>
 
 
 def test_parse_getcurrent_feed_dedups_and_filters_form_type() -> None:
-    filings = parse_getcurrent_feed(GETCURRENT_FEED, "4")
+    filings = parse_getcurrent_feed(GETCURRENT_FEED, ("4",))
 
     # 같은 filing의 Reporting/Issuer 중복 entry는 1건으로, 4/A는 제외.
     assert len(filings) == 1

@@ -12,12 +12,14 @@ import sys
 
 from app.batch.macro_collectors.base import CollectorRunResult, MacroCollector
 from app.batch.macro_collectors.edgar_form4_collector import EdgarForm4Collector
+from app.batch.macro_collectors.edgar_schedule13_collector import EdgarSchedule13Collector
 from app.core.logging import configure_logging
 
 logger = logging.getLogger(__name__)
 
 COLLECTORS: dict[str, type[MacroCollector]] = {
     "edgar_form4": EdgarForm4Collector,
+    "edgar_13dg": EdgarSchedule13Collector,
 }
 
 

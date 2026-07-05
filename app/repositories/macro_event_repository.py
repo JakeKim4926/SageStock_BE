@@ -35,6 +35,31 @@ async def get_by_unique_id(
     return result.scalar_one_or_none()
 
 
+async def get_latest_13dg_event(
+    db: AsyncSession,
+    source_id: str,
+    filer_cik: str,
+    subject_company_cik: str,
+    form_family: str,
+) -> MacroEvent | None:
+    """같은 (filer, subject, form_family)의 가장 최근 13D/G 이벤트.
+
+    amendment의 지분 변화(Δ%p) 판정에 쓰는 직전 관찰값 조회 (SPEC §6.5)."""
+    statement = (
+        select(MacroEvent)
+        .where(
+            MacroEvent.source_id == source_id,
+            MacroEvent.raw_payload["filer_cik"].as_string() == filer_cik,
+            MacroEvent.raw_payload["subject_company_cik"].as_string() == subject_company_cik,
+            MacroEvent.raw_payload["form_family"].as_string() == form_family,
+        )
+        .order_by(MacroEvent.publicly_observable_at.desc())
+        .limit(1)
+    )
+    result = await db.execute(statement)
+    return result.scalar_one_or_none()
+
+
 async def upsert_events(
     db: AsyncSession,
     rows: list[MacroEvent],

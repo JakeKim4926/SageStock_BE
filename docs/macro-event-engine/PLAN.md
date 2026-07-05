@@ -101,7 +101,10 @@ collector 진입점은 `python -m` 실행 가능하게 만든다 — Phase 0 스
   - [x] Form 4: code P만, $1M 이상, roles 필터, option/grant/automatic 제외
         — 필터 값은 event_type_rules.yaml에서 로드. 실피드 19건 파싱 19/19 성공,
         code P 매수 0건(주말 피드) → collected=0 정상 동작. 평일 실수집은 게이트에서 재확인
-  - [ ] 13D/13G: 신규 + amendment 1.0%p 이상, form_family 정규화, 13G 일 처리 상한
+  - [x] 13D/13G: 신규 + amendment 1.0%p 이상, form_family 정규화, 13G 일 처리 상한
+        — 주의: 2024-12 이후 EDGAR 폼 타입은 SCHEDULE 13D/13G(+/A). amendment Δ는
+        DB의 직전 관찰(filer+subject+family) 대비, 직전 없으면 첫 관찰로 수집.
+        실수집 2026-07-05: 67건(13D 43·13G 24) Neon 저장, freshness FRESH, 샘플 확인
   - [ ] 8-K: Item 1.01 / 조건부 8.01 (strong signal 2개+, 단독 키워드 거부)
 - [ ] **SAM.gov** (§6.1)
   - [ ] Opportunities API, opportunity_type 4종

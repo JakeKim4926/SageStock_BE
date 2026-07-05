@@ -38,8 +38,10 @@ class MacroCollector(ABC):
     source_id: ClassVar[str]
 
     @abstractmethod
-    async def collect(self) -> list[NormalizedMacroEvent]:
-        """소스 조회→파싱→필터→정규화. 저장·freshness는 run()이 처리한다."""
+    async def collect(self, session: AsyncSession) -> list[NormalizedMacroEvent]:
+        """소스 조회→파싱→필터→정규화. 저장·freshness는 run()이 처리한다.
+
+        session은 읽기용(예: 13D/G amendment의 직전 지분율 조회) — 쓰기는 run() 소유."""
 
     async def run(
         self,
@@ -47,9 +49,9 @@ class MacroCollector(ABC):
     ) -> CollectorRunResult:
         collected_at = now_kst()
         try:
-            events = await self.collect()
-            rows = [to_model(event, self.source_id, collected_at) for event in events]
             async with session_factory() as session:
+                events = await self.collect(session)
+                rows = [to_model(event, self.source_id, collected_at) for event in events]
                 inserted, updated = await macro_event_repository.upsert_events(session, rows)
                 await macro_source_freshness_repository.mark_success(
                     session, self.source_id, collected_at

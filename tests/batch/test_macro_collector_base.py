@@ -39,14 +39,14 @@ class FakeCollector(MacroCollector):
     def __init__(self, events: list[NormalizedMacroEvent]) -> None:
         self._events = events
 
-    async def collect(self) -> list[NormalizedMacroEvent]:
+    async def collect(self, session: AsyncSession) -> list[NormalizedMacroEvent]:
         return self._events
 
 
 class FailingCollector(MacroCollector):
     source_id = TEST_SOURCE_ID
 
-    async def collect(self) -> list[NormalizedMacroEvent]:
+    async def collect(self, session: AsyncSession) -> list[NormalizedMacroEvent]:
         raise RuntimeError("source unreachable")
 
 
