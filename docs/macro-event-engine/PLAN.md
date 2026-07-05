@@ -122,7 +122,11 @@ collector 진입점은 `python -m` 실행 가능하게 만든다 — Phase 0 스
         — 실수집 2026-07-05(7일 백필): 67건 저장(award 61 L5·sol 3·pre 1·ss 2),
         agency 단독 수집 0·필수필드 누락 0 확인. 톱 샘플 DOE HALEU $1.07B.
         관찰: title 기준 strong keyword 매칭률 ~0.1% — 운영 검증 키워드 조정 대상
-- [ ] **USAspending** (§6.2) — 신규 award $50M+ / modification은 delta $10M+ 체인 반영만
+- [x] **USAspending** (§6.2) — 신규 award $50M+ / modification은 delta $10M+ 체인 반영만
+      — spending_by_award(date_type=new_awards_only, 계약 A~D, 서버+클라 이중 금액 필터).
+      mod로 이벤트 생성 경로 없음(create_new_event=false 준수), delta 체인 반영은
+      Phase 2 Chain Resolve. 실수집 2026-07-05: 5건 저장(전부 L6, award_id·UEI 포함) —
+      톱 American Centrifuge $900M(DOE, SAM HALEU 체인 후보)
 - [ ] **Defense.gov Contracts** (§6.7) — HTML 파싱, 항목 분리, 금액·수주사·기관 추출(3/4 필드),
       $50M+ 또는 $7.5M+ strong keyword, modification 구분
 - [ ] **White House** (§6.8) — collector/parser/router 분리, EO 번호 후보 추출,
