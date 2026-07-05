@@ -36,7 +36,7 @@
       market_latency_status, resolution_status, basket_mapping_status, reaction_target_status,
       freshness_status,
       event_status(ACTIVE / ACTIVE_UNLINKED 등), propagation data_quality
-- [ ] `config/macro_events/keyword_domain_map.yaml` — SPEC §9.5 + ambiguous 단일 목록 §9.3
+- [x] `config/macro_events/keyword_domain_map.yaml` — SPEC §9.5 + ambiguous 단일 목록 §9.3
 - [ ] `config/macro_events/event_type_rules.yaml` — 수집 조건(§6), chain 규칙(§7), clamp(§15)
 - [ ] `config/macro_events/domain_basket_map.csv` — §10.2 (17행)
 - [ ] `config/macro_events/entity_alias_map.csv` — 시드: 미국 대형 정부 수주사
