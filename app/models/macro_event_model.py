@@ -2,7 +2,6 @@ from datetime import datetime
 from typing import Any
 
 from sqlalchemy import (
-    JSON,
     DateTime,
     Float,
     ForeignKey,
@@ -12,12 +11,10 @@ from sqlalchemy import (
     UniqueConstraint,
     func,
 )
-from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.database import Base
-
-JSON_VARIANT = JSON().with_variant(JSONB(), "postgresql")
+from app.models.types import JSON_VARIANT
 
 
 class MacroEvent(Base):

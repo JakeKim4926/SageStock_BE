@@ -1,13 +1,10 @@
 from datetime import datetime
 
-from sqlalchemy import JSON, Boolean, DateTime, String, func
-from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy import Boolean, DateTime, String, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.database import Base
-
-# 테스트(sqlite)에서는 JSON, 운영(PG)에서는 JSONB로 저장.
-JSON_VARIANT = JSON().with_variant(JSONB(), "postgresql")
+from app.models.types import JSON_VARIANT
 
 
 class MacroEventSource(Base):

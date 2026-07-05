@@ -70,7 +70,8 @@
       — 2026-07-05 Neon에서 0003→0004→0003→0004 왕복, 시드 8행·JSONB 타입 확인.
       로컬 PG는 없음 — sqlite는 conftest create_all로 전체 DDL 생성 검증(109 테스트)
 - [x] GH Actions 러너에서 스모크 잡 1회 성공 (러너→Neon 직결 + 의존성 설치 검증) — 2026-07-04, run 28707687394
-- [ ] rule-check 통과
+- [x] rule-check 통과 — 2026-07-05, BLOCKER 0 (WARN 1건 JSON_VARIANT 중복은 즉시 수정,
+      app/models/types.py로 승격). 잔여 부채는 DEBT_LOG 2026-07-05 3건
 
 ---
 
