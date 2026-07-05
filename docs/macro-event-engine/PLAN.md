@@ -31,11 +31,13 @@
 
 ### 구현
 
-- [ ] `app/constants/macro_domains.py` — canonical_domain enum 16종 (SPEC §9.1)
-- [ ] `app/constants/macro_enums.py` — event_type(3종), source_role, certainty_level(L1~L6),
+- [x] `app/constants/macro_domains.py` — canonical_domain enum 16종 (SPEC §9.1)
+- [x] `app/constants/macro_enums.py` — event_type(3종), source_role, certainty_level(L1~L6),
       market_latency_status, resolution_status, basket_mapping_status, reaction_target_status,
       freshness_status,
       event_status(ACTIVE / ACTIVE_UNLINKED 등), propagation data_quality
+      (+§16 DDL이 저장하는 SPEC 정의 enum 4종 추가: latency data_quality §13.3,
+      latency_reference_type §13.1, reaction_target_type §13.3, outcome_label §16)
 - [x] `config/macro_events/keyword_domain_map.yaml` — SPEC §9.5 + ambiguous 단일 목록 §9.3
 - [x] `config/macro_events/event_type_rules.yaml` — 수집 조건(§6), chain 규칙(§7), clamp(§15)
 - [x] `config/macro_events/domain_basket_map.csv` — §10.2 (17행)
