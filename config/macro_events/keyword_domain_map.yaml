@@ -1,0 +1,83 @@
+# Macro Event Engine — keyword → domain 매핑
+# 정본 명세: docs/macro-event-engine/SPEC.md (§9 Domain Assignment)
+# 매핑 값의 정본은 이 파일이다. SPEC과 어긋나면 구현을 멈추고 보고한다.
+# domain 키는 SPEC §9.1 canonical_domain enum만 사용한다.
+
+version: keyword_domain_map_v1.0
+
+# ---------------------------------------------------------------------------
+# ambiguous keywords 단일 목록 — 유일한 진실 (SPEC §9.3)
+# 단독 매칭 시 domain_confidence 낮게, primary_domain 확정 금지.
+# phrase keyword 또는 같은 domain 보조 keyword가 추가로 필요.
+# 각 domain의 ambiguous_keywords는 반드시 이 목록의 부분집합이어야 한다 (정합성 테스트 대상).
+# ---------------------------------------------------------------------------
+ambiguous_keywords:
+  - AI
+  - chip
+  - gas
+  - launch
+  - energy
+  - power
+  - security
+  - infrastructure
+  - contract      # 어느 domain에도 매핑되지 않음
+  - government    # 어느 domain에도 매핑되지 않음
+  - defense
+  - electricity
+
+# ---------------------------------------------------------------------------
+# domain별 keyword 매핑 (SPEC §9.5)
+# 매칭 규칙(§9.2): title/summary/official_abstract/structured_description만,
+# 대소문자 무시, word boundary, phrase는 phrase 단위. 본문 전체 매칭 금지.
+# ---------------------------------------------------------------------------
+domains:
+  space:
+    phrase_keywords: [space station, lunar lander, launch vehicle, satellite constellation]
+    keywords: [NASA, lunar, satellite, Artemis]
+    ambiguous_keywords: [launch]
+  defense:
+    phrase_keywords: [missile defense, hypersonic weapon, defense contract]
+    keywords: [DoD, DARPA, missile, hypersonic, army, navy, air force]
+    ambiguous_keywords: [defense]
+  power_grid:
+    phrase_keywords: [power grid, electric grid, transmission line, grid connection, power infrastructure]
+    keywords: [transformer, transmission, substation]
+    ambiguous_keywords: [power, electricity]
+  energy:
+    phrase_keywords: [energy infrastructure, LNG terminal, oil production, gas pipeline]
+    keywords: [LNG, crude oil]
+    ambiguous_keywords: [energy, gas]
+  nuclear:
+    phrase_keywords: [small modular reactor, nuclear reactor, nuclear power]
+    keywords: [SMR, uranium, reactor, nuclear]
+  ai_infrastructure:
+    phrase_keywords: [artificial intelligence, AI infrastructure, compute cluster, GPU cluster, AI accelerator]
+    keywords: [GPU]
+    ambiguous_keywords: [AI]
+  data_center:
+    phrase_keywords: [data center, datacenter, hyperscale data center, cloud infrastructure]
+    keywords: [hyperscale]
+  semiconductor:
+    phrase_keywords: [advanced packaging, semiconductor manufacturing, chip fabrication, foundry capacity]
+    keywords: [semiconductor, HBM, foundry]
+    ambiguous_keywords: [chip]
+  critical_minerals:
+    phrase_keywords: [rare earth, critical minerals, mineral supply chain]
+    keywords: [lithium, nickel, cobalt]
+  battery:
+    phrase_keywords: [battery supply chain, energy storage system, lithium-ion battery]
+    keywords: [ESS, battery]
+  quantum:
+    phrase_keywords: [quantum computing, quantum communication, quantum sensor]
+    keywords: [quantum]
+  cybersecurity:
+    phrase_keywords: [cyber security, cybersecurity, zero trust, cyber defense]
+    keywords: [ransomware, encryption]
+    ambiguous_keywords: [security]
+  infrastructure:
+    phrase_keywords: [infrastructure investment, public infrastructure, transportation infrastructure, critical infrastructure]
+    keywords: []
+    ambiguous_keywords: [infrastructure]
+  financials:
+    phrase_keywords: [bank capital, financial institution, asset manager]
+    keywords: [banking, financials]

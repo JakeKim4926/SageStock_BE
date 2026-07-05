@@ -20,6 +20,8 @@
 - [x] keyword_domain_map: v1은 yaml 직접 로드로 확정 (DB 동기화는 v1.5)
 - [x] 가격 데이터: v1은 EOD/지연 데이터로 확정 (SPEC §13.4) — 구체 어댑터 선택은 Phase 3
 - [x] P1 Alert 채널: **이메일**로 확정 — 발송 방식(SMTP 등)과 자격증명 .env 추가는 Phase 4 착수 전까지
+- [x] 배치 실행 방식 확정 (2026-07-04): GH Actions 러너가 `python -m app.batch...` 직접 실행 + Neon 직결.
+      Render HTTP 미경유 (콜드스타트·100초 타임아웃·스핀다운 회피). SPEC §3 참조
 
 ---
 
@@ -29,36 +31,47 @@
 
 ### 구현
 
-- [ ] `app/constants/macro_domains.py` — canonical_domain enum 16종 (SPEC §9.1)
-- [ ] `app/constants/macro_enums.py` — event_type(3종), source_role, certainty_level(L1~L6),
+- [x] `app/constants/macro_domains.py` — canonical_domain enum 16종 (SPEC §9.1)
+- [x] `app/constants/macro_enums.py` — event_type(3종), source_role, certainty_level(L1~L6),
       market_latency_status, resolution_status, basket_mapping_status, reaction_target_status,
       freshness_status,
       event_status(ACTIVE / ACTIVE_UNLINKED 등), propagation data_quality
-- [ ] `config/macro_events/keyword_domain_map.yaml` — SPEC §9.5 + ambiguous 단일 목록 §9.3
-- [ ] `config/macro_events/event_type_rules.yaml` — 수집 조건(§6), chain 규칙(§7), clamp(§15)
-- [ ] `config/macro_events/domain_basket_map.csv` — §10.2 (17행)
-- [ ] `config/macro_events/entity_alias_map.csv` — 시드: 미국 대형 정부 수주사
-  - [ ] Phase 0 게이트 기준: 상위 50개 HIGH confidence 시드 (방산/항공우주 위주, verified_by/verified_at 채움)
+      (+§16 DDL이 저장하는 SPEC 정의 enum 4종 추가: latency data_quality §13.3,
+      latency_reference_type §13.1, reaction_target_type §13.3, outcome_label §16)
+- [x] `config/macro_events/keyword_domain_map.yaml` — SPEC §9.5 + ambiguous 단일 목록 §9.3
+- [x] `config/macro_events/event_type_rules.yaml` — 수집 조건(§6), chain 규칙(§7), clamp(§15)
+- [x] `config/macro_events/domain_basket_map.csv` — §10.2 (17행)
+- [x] `config/macro_events/entity_alias_map.csv` — 시드: 미국 대형 정부 수주사
+  - [x] Phase 0 게이트 기준: 상위 50개 HIGH confidence 시드 (방산/항공우주 위주, verified_by/verified_at 채움)
+        — 35개 법인/50 alias, ticker·CIK는 SEC company_tickers.json 대조 검증(2026-07-05)
   - [ ] v1 목표 100~200개 — 운영 검증에서 alias 매핑률 측정 후 확장 (SPEC §11.4)
-- [ ] config 로더 (`app/services/macro_events/config_loader.py`) — yaml/csv 파싱 + 스키마 검증
-- [ ] SQLAlchemy 모델 (`app/models/macro_*.py`) — SPEC §16:
-  - [ ] macro_events (시각 필드 6종 §13.1, domain 필드 5종 §9.4, linked_entities JSONB 포함)
-  - [ ] macro_event_chains
-  - [ ] macro_event_outcomes (§16 최소 필드: horizon, price/benchmark/excess_return,
+- [x] config 로더 (`app/services/macro_events/config_loader.py`) — yaml/csv 파싱 + 스키마 검증
+- [x] SQLAlchemy 모델 (`app/models/macro_*.py`) — SPEC §16:
+  - [x] macro_events (시각 필드 6종 §13.1, domain 필드 5종 §9.4, linked_entities JSONB 포함)
+  - [x] macro_event_chains
+  - [x] macro_event_outcomes (§16 최소 필드: horizon, price/benchmark/excess_return,
         outcome_label, score_version 포함 — 점수 보정 원료, Phase 0 DDL에 필수)
-  - [ ] macro_market_reaction_snapshots (basket_mapping_status/reason 포함 §10.4)
-  - [ ] macro_event_sources (소스 레지스트리 §4 시드 데이터 포함)
-  - [ ] macro_source_freshness
-  - [ ] macro_entity_alias_map
-- [ ] Alembic migration 작성
+  - [x] macro_market_reaction_snapshots (basket_mapping_status/reason 포함 §10.4)
+  - [x] macro_event_sources (소스 레지스트리 §4 시드 데이터 포함)
+  - [x] macro_source_freshness
+  - [x] macro_entity_alias_map
+- [x] Alembic migration 작성 — `0004_create_macro_event_tables.py` (시드 8행 포함)
+- [x] 배치 실행 경로 스모크 테스트 — `.github/workflows/macro-batch-smoke.yml` (workflow_dispatch):
+      checkout → uv sync → `python -m app.batch.smoke` (Neon `SELECT 1` + config 로더 1회).
+      `DATABASE_URL`은 GH repo secret. 이후 Phase 1~4 배치가 전부 이 실행 경로를 재사용
+      (config 로더 1회는 2026-07-05 로더 구현과 함께 smoke.py에 추가, 로컬 검증 완료)
 
 ### 통과 게이트
 
-- [ ] 정합성 pytest (SPEC §10.5): keyword domain ⊆ enum / basket domain ⊆ enum /
+- [x] 정합성 pytest (SPEC §10.5): keyword domain ⊆ enum / basket domain ⊆ enum /
       unknown 제외 domain의 US basket 커버리지 / ambiguous 키워드가 keywords에 중복 등재 안 됨
-- [ ] config 로더 단위 테스트 (잘못된 domain·필드 누락 시 명시적 에러)
-- [ ] `alembic upgrade head` + `downgrade` 왕복 성공 (로컬 + Neon)
-- [ ] rule-check 통과
+- [x] config 로더 단위 테스트 (잘못된 domain·필드 누락 시 명시적 에러)
+- [x] `alembic upgrade head` + `downgrade` 왕복 성공 (로컬 + Neon)
+      — 2026-07-05 Neon에서 0003→0004→0003→0004 왕복, 시드 8행·JSONB 타입 확인.
+      로컬 PG는 없음 — sqlite는 conftest create_all로 전체 DDL 생성 검증(109 테스트)
+- [x] GH Actions 러너에서 스모크 잡 1회 성공 (러너→Neon 직결 + 의존성 설치 검증) — 2026-07-04, run 28707687394
+- [x] rule-check 통과 — 2026-07-05, BLOCKER 0 (WARN 1건 JSON_VARIANT 중복은 즉시 수정,
+      app/models/types.py로 승격). 잔여 부채는 DEBT_LOG 2026-07-05 3건
 
 ---
 
@@ -67,6 +80,7 @@
 브랜치: `feature/macro-phase1-collectors`
 공통 패턴: collector(수집) / parser(추출) / 필터(수집 조건) 분리. 실패는 freshness에 FAILED + last_error.
 Phase 1에서는 수동/로컬 실행으로 검증한다 (GH Actions cron 배선은 Phase 4).
+collector 진입점은 `python -m` 실행 가능하게 만든다 — Phase 0 스모크와 동일한 실행 경로.
 
 ### 공통 기반
 
@@ -183,7 +197,8 @@ Phase 1에서는 수동/로컬 실행으로 검증한다 (GH Actions cron 배선
 - [ ] US Pre-open Event Check 생성기 (§5.3)
 - [ ] P1 Event Alert (§5.4) — 발생 조건 5종 + 출력 원칙(매수/매도 문구 금지), 결정된 채널로 발송
 - [ ] Outcome Tracking Job — 체인별 사후 결과 기록 (event_outcomes)
-- [ ] GH Actions cron 배선 — 수집 주기(§4: EDGAR 15~30분, WH 1시간, Defense.gov ≈06:00 KST,
+- [ ] GH Actions cron 배선 — 러너가 collector 모듈 직접 실행 (Render 미경유, Phase 0 스모크 경로 재사용).
+      수집 주기(§4: EDGAR 15~30분, WH 1시간, Defense.gov ≈06:00 KST,
       나머지 일 1~2회) + 리포트 트리거(08:40 / 21:30 KST 이전 완료되도록 여유 포함)
 - [ ] 운영 로그/실패 가시화 (리포트 내 freshness 표시)
 
