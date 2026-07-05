@@ -2,39 +2,39 @@ canonical_entity_name,alias_name,normalized_alias,ticker,exchange,cik,corp_code,
 Lockheed Martin Corporation,Lockheed Martin Corp.,lockheed martin corp,LMT,NYSE,0000936468,,,US,PUBLIC_COMPANY,HIGH,claude+sec_edgar,2026-07-05,true,1
 Lockheed Martin Corporation,Lockheed Martin Corporation,lockheed martin corporation,LMT,NYSE,0000936468,,,US,PUBLIC_COMPANY,HIGH,claude+sec_edgar,2026-07-05,true,1
 RTX Corporation,RTX Corp.,rtx corp,RTX,NYSE,0000101829,,,US,PUBLIC_COMPANY,HIGH,claude+sec_edgar,2026-07-05,true,1
-RTX Corporation,Raytheon Co.,raytheon co,RTX,NYSE,0000101829,,,US,PUBLIC_COMPANY,HIGH,claude+sec_edgar,2026-07-05,true,1
+RTX Corporation,Raytheon Co.,raytheon co,RTX,NYSE,0000101829,,,US,PUBLIC_COMPANY,HIGH,jake_kim,2026-07-05,true,1
 The Boeing Company,The Boeing Co.,the boeing co,BA,NYSE,0000012927,,,US,PUBLIC_COMPANY,HIGH,claude+sec_edgar,2026-07-05,true,1
 The Boeing Company,Boeing Co.,boeing co,BA,NYSE,0000012927,,,US,PUBLIC_COMPANY,HIGH,claude+sec_edgar,2026-07-05,true,1
 Northrop Grumman Corporation,Northrop Grumman Corp.,northrop grumman corp,NOC,NYSE,0001133421,,,US,PUBLIC_COMPANY,HIGH,claude+sec_edgar,2026-07-05,true,1
 Northrop Grumman Corporation,Northrop Grumman Systems Corp.,northrop grumman systems corp,NOC,NYSE,0001133421,,,US,PUBLIC_COMPANY,HIGH,claude+sec_edgar,2026-07-05,true,1
 General Dynamics Corporation,General Dynamics Corp.,general dynamics corp,GD,NYSE,0000040533,,,US,PUBLIC_COMPANY,HIGH,claude+sec_edgar,2026-07-05,true,1
-General Dynamics Corporation,General Dynamics Electric Boat Corp.,general dynamics electric boat corp,GD,NYSE,0000040533,,,US,PUBLIC_COMPANY,HIGH,claude+sec_edgar,2026-07-05,true,1
+General Dynamics Corporation,General Dynamics Electric Boat Corp.,general dynamics electric boat corp,GD,NYSE,0000040533,,,US,PUBLIC_COMPANY,HIGH,jake_kim,2026-07-05,true,1
 L3Harris Technologies Inc.,L3Harris Technologies Inc.,l3harris technologies inc,LHX,NYSE,0000202058,,,US,PUBLIC_COMPANY,HIGH,claude+sec_edgar,2026-07-05,true,1
 Huntington Ingalls Industries Inc.,Huntington Ingalls Industries Inc.,huntington ingalls industries inc,HII,NYSE,0001501585,,,US,PUBLIC_COMPANY,HIGH,claude+sec_edgar,2026-07-05,true,1
-Huntington Ingalls Industries Inc.,Huntington Ingalls Inc.,huntington ingalls inc,HII,NYSE,0001501585,,,US,PUBLIC_COMPANY,HIGH,claude+sec_edgar,2026-07-05,true,1
+Huntington Ingalls Industries Inc.,Huntington Ingalls Inc.,huntington ingalls inc,HII,NYSE,0001501585,,,US,PUBLIC_COMPANY,HIGH,jake_kim,2026-07-05,true,1
 Leidos Holdings Inc.,Leidos Holdings Inc.,leidos holdings inc,LDOS,NYSE,0001336920,,,US,PUBLIC_COMPANY,HIGH,claude+sec_edgar,2026-07-05,true,1
 Leidos Holdings Inc.,Leidos Inc.,leidos inc,LDOS,NYSE,0001336920,,,US,PUBLIC_COMPANY,HIGH,claude+sec_edgar,2026-07-05,true,1
 Textron Inc.,Textron Inc.,textron inc,TXT,NYSE,0000217346,,,US,PUBLIC_COMPANY,HIGH,claude+sec_edgar,2026-07-05,true,1
-Textron Inc.,Bell Textron Inc.,bell textron inc,TXT,NYSE,0000217346,,,US,PUBLIC_COMPANY,HIGH,claude+sec_edgar,2026-07-05,true,1
+Textron Inc.,Bell Textron Inc.,bell textron inc,TXT,NYSE,0000217346,,,US,PUBLIC_COMPANY,HIGH,jake_kim,2026-07-05,true,1
 Honeywell International Inc.,Honeywell International Inc.,honeywell international inc,HON,NASDAQ,0000773840,,,US,PUBLIC_COMPANY,HIGH,claude+sec_edgar,2026-07-05,true,1
 General Electric Company,General Electric Co.,general electric co,GE,NYSE,0000040545,,,US,PUBLIC_COMPANY,HIGH,claude+sec_edgar,2026-07-05,true,1
-General Electric Company,GE Aerospace,ge aerospace,GE,NYSE,0000040545,,,US,PUBLIC_COMPANY,HIGH,claude+sec_edgar,2026-07-05,true,1
+General Electric Company,GE Aerospace,ge aerospace,GE,NYSE,0000040545,,,US,PUBLIC_COMPANY,HIGH,jake_kim,2026-07-05,true,1
 Booz Allen Hamilton Holding Corporation,Booz Allen Hamilton Holding Corp.,booz allen hamilton holding corp,BAH,NYSE,0001443646,,,US,PUBLIC_COMPANY,HIGH,claude+sec_edgar,2026-07-05,true,1
 Booz Allen Hamilton Holding Corporation,Booz Allen Hamilton Inc.,booz allen hamilton inc,BAH,NYSE,0001443646,,,US,PUBLIC_COMPANY,HIGH,claude+sec_edgar,2026-07-05,true,1
 CACI International Inc.,CACI International Inc.,caci international inc,CACI,NYSE,0000016058,,,US,PUBLIC_COMPANY,HIGH,claude+sec_edgar,2026-07-05,true,1
-CACI International Inc.,CACI Inc.-Federal,caci inc-federal,CACI,NYSE,0000016058,,,US,PUBLIC_COMPANY,HIGH,claude+sec_edgar,2026-07-05,true,1
+CACI International Inc.,CACI Inc.-Federal,caci inc-federal,CACI,NYSE,0000016058,,,US,PUBLIC_COMPANY,HIGH,jake_kim,2026-07-05,true,1
 Science Applications International Corporation,Science Applications International Corp.,science applications international corp,SAIC,NASDAQ,0001571123,,,US,PUBLIC_COMPANY,HIGH,claude+sec_edgar,2026-07-05,true,1
 KBR Inc.,KBR Inc.,kbr inc,KBR,NYSE,0001357615,,,US,PUBLIC_COMPANY,HIGH,claude+sec_edgar,2026-07-05,true,1
 Palantir Technologies Inc.,Palantir Technologies Inc.,palantir technologies inc,PLTR,NASDAQ,0001321655,,,US,PUBLIC_COMPANY,HIGH,claude+sec_edgar,2026-07-05,true,1
-Palantir Technologies Inc.,Palantir USG Inc.,palantir usg inc,PLTR,NASDAQ,0001321655,,,US,PUBLIC_COMPANY,HIGH,claude+sec_edgar,2026-07-05,true,1
+Palantir Technologies Inc.,Palantir USG Inc.,palantir usg inc,PLTR,NASDAQ,0001321655,,,US,PUBLIC_COMPANY,HIGH,jake_kim,2026-07-05,true,1
 Kratos Defense & Security Solutions Inc.,Kratos Defense & Security Solutions Inc.,kratos defense & security solutions inc,KTOS,NASDAQ,0001069258,,,US,PUBLIC_COMPANY,HIGH,claude+sec_edgar,2026-07-05,true,1
 AeroVironment Inc.,AeroVironment Inc.,aerovironment inc,AVAV,NASDAQ,0001368622,,,US,PUBLIC_COMPANY,HIGH,claude+sec_edgar,2026-07-05,true,1
 Rocket Lab Corporation,Rocket Lab Corp.,rocket lab corp,RKLB,NASDAQ,0001819994,,,US,PUBLIC_COMPANY,HIGH,claude+sec_edgar,2026-07-05,true,1
 Rocket Lab Corporation,Rocket Lab USA Inc.,rocket lab usa inc,RKLB,NASDAQ,0001819994,,,US,PUBLIC_COMPANY,HIGH,claude+sec_edgar,2026-07-05,true,1
 Intuitive Machines Inc.,Intuitive Machines Inc.,intuitive machines inc,LUNR,NASDAQ,0001844452,,,US,PUBLIC_COMPANY,HIGH,claude+sec_edgar,2026-07-05,true,1
-Intuitive Machines Inc.,Intuitive Machines LLC,intuitive machines llc,LUNR,NASDAQ,0001844452,,,US,PUBLIC_COMPANY,HIGH,claude+sec_edgar,2026-07-05,true,1
+Intuitive Machines Inc.,Intuitive Machines LLC,intuitive machines llc,LUNR,NASDAQ,0001844452,,,US,PUBLIC_COMPANY,HIGH,jake_kim,2026-07-05,true,1
 Oshkosh Corporation,Oshkosh Corp.,oshkosh corp,OSK,NYSE,0000775158,,,US,PUBLIC_COMPANY,HIGH,claude+sec_edgar,2026-07-05,true,1
-Oshkosh Corporation,Oshkosh Defense LLC,oshkosh defense llc,OSK,NYSE,0000775158,,,US,PUBLIC_COMPANY,HIGH,claude+sec_edgar,2026-07-05,true,1
+Oshkosh Corporation,Oshkosh Defense LLC,oshkosh defense llc,OSK,NYSE,0000775158,,,US,PUBLIC_COMPANY,HIGH,jake_kim,2026-07-05,true,1
 Curtiss-Wright Corporation,Curtiss-Wright Corp.,curtiss-wright corp,CW,NYSE,0000026324,,,US,PUBLIC_COMPANY,HIGH,claude+sec_edgar,2026-07-05,true,1
 HEICO Corporation,HEICO Corp.,heico corp,HEI,NYSE,0000046619,,,US,PUBLIC_COMPANY,HIGH,claude+sec_edgar,2026-07-05,true,1
 TransDigm Group Incorporated,TransDigm Group Inc.,transdigm group inc,TDG,NYSE,0001260221,,,US,PUBLIC_COMPANY,HIGH,claude+sec_edgar,2026-07-05,true,1

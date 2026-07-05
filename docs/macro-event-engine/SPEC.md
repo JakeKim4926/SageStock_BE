@@ -575,6 +575,11 @@ basket_mapping_status: MAPPED / NO_DOMAIN / NO_BASKET / DATA_UNAVAILABLE
 허용: CIK / corp_code / UEI exact match, curated alias exact match (정규화 법인명·alias)
 금지: 문자열 유사도 ticker 추론, LLM 기반 ticker 추론, parent/subsidiary 임의 추론,
       이름 일부 포함 매핑, 사람이 검증하지 않은 자동 alias 추가
+
+alias 매칭은 normalized_alias 전체 문자열 exact match만 허용한다.
+단독 약칭은 alias 테이블 등재 금지: "Bell"→TXT, "GE"→GE, "USG"→PLTR,
+"Electric Boat"→GD 같은 약칭 단독 행을 넣지 않는다 — 전체 표기
+(예: "General Dynamics Electric Boat Corp.")만 등재한다.
 ```
 
 ### 11.2 절차
@@ -608,6 +613,17 @@ Phase 0 통과 기준:  상위 50개 HIGH confidence alias 시드
 ```
 
 alias table은 투자 후보 리스트가 아니라 가격 반응 측정용 식별자 테이블이다.
+
+시드 검토 주석 (2026-07-05, 사용자 승인 — 자회사/변형 alias 9건):
+
+```text
+- Huntington Ingalls Inc.→HII: 정식 상장사명은 Huntington Ingalls Industries, Inc.
+  (표기 변형 alias로 승인)
+- Raytheon Co.→RTX: 2020-04 합병 이후 RTX의 자회사. 2020-04 이전 문서의
+  Raytheon Co.를 RTX로 소급 매핑하지 않도록 주의
+- GE Aerospace→GE: 2024-04 GE 3분할 이후 존속 GE = GE Aerospace.
+  분할 이전 General Electric 전체 문맥과 혼동 금지
+```
 
 ---
 
