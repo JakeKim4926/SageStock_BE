@@ -11,12 +11,6 @@
 - 위험도: 중
 - 후속: Phase 1~2에서 각 소비자가 해당 섹션 파싱 모델을 갖출 때 검증 추가
 
-### [2026-07-05] 검증누락 — GH Actions 러너에서 config 로더 포함 스모크 미실행
-- 위치: app/batch/smoke.py / .github/workflows/macro-batch-smoke.yml
-- 설명: smoke에 config 로드 1회를 추가했지만 러너 재실행은 안 함(로컬만 검증). 러너 환경의 경로/인코딩 차이가 있으면 Phase 1 첫 배치에서 드러남.
-- 위험도: 낮음
-- 후속: develop→main 반영 후 workflow_dispatch 1회 실행 (Phase 1 착수 전)
-
 ### [2026-07-05] 후속분리 — macro_entity_alias_map 테이블 CSV 동기화 미구현
 - 위치: alembic/versions/0004_create_macro_event_tables.py (빈 테이블) / config/macro_events/entity_alias_map.csv
 - 설명: DDL은 만들었지만 CSV→DB 적재 로직이 없어 테이블이 빈 상태. v1은 로더가 CSV 직접 읽으므로 당장 무해하나, Phase 2 Entity Resolution이 DB를 볼지 CSV를 볼지 결정 필요.
@@ -91,6 +85,10 @@
 - 후속: [tool.mypy] ignore_missing_imports 또는 types-passlib/pandas-stubs 도입
 
 ## 해결됨
+
+### [2026-07-05] 검증누락 — GH Actions 러너에서 config 로더 포함 스모크 미실행 (2026-07-05 해결)
+- 위치: app/batch/smoke.py / .github/workflows/macro-batch-smoke.yml
+- 설명: develop→main 반영(ea57267) 후 workflow_dispatch 실행(run 28733796989, success) — 러너에서 Neon 직결 + config 4종 로드(basket 17행/alias 50행) 확인. Phase 1~4 배치가 이 실행 경로를 재사용한다.
 
 ### [2026-06-16] 기존부채 — test_get_quote_computes_change 환경 의존 (2026-07-05 해결)
 - 위치: tests/services/test_stock_service.py
