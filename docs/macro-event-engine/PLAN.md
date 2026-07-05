@@ -84,10 +84,13 @@ collector 진입점은 `python -m` 실행 가능하게 만든다 — Phase 0 스
 
 ### 공통 기반
 
-- [ ] collector 베이스 (`app/batch/macro_collectors/base.py`) — 실행 기록, freshness 갱신,
+- [x] collector 베이스 (`app/batch/macro_collectors/base.py`) — 실행 기록, freshness 갱신,
       publicly_observable_at 설정, raw_payload 보존, 예외 시 FAILED 기록
-- [ ] Normalize Service — 공통 이벤트 스키마 변환, source timezone → KST 변환
-- [ ] 수집 결과 저장 repository (dedup 전 단계 staging 또는 event_unique_id upsert)
+- [x] Normalize Service — 공통 이벤트 스키마 변환, source timezone → KST 변환
+      (`app/services/macro_events/normalize.py` — NormalizedMacroEvent가
+      publicly_observable_at aware 필수·raw 보존·taxonomy 3종을 스키마로 강제)
+- [x] 수집 결과 저장 repository (dedup 전 단계 staging 또는 event_unique_id upsert)
+      — upsert 방식 선택: (source_id, event_unique_id) 기준, 재게시=업데이트
 
 ### Collector별 (각각: 클라이언트 → 파싱 → 필터 → 저장 → 단위 테스트)
 
