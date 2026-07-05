@@ -37,8 +37,8 @@
       freshness_status,
       event_status(ACTIVE / ACTIVE_UNLINKED 등), propagation data_quality
 - [x] `config/macro_events/keyword_domain_map.yaml` — SPEC §9.5 + ambiguous 단일 목록 §9.3
-- [ ] `config/macro_events/event_type_rules.yaml` — 수집 조건(§6), chain 규칙(§7), clamp(§15)
-- [ ] `config/macro_events/domain_basket_map.csv` — §10.2 (17행)
+- [x] `config/macro_events/event_type_rules.yaml` — 수집 조건(§6), chain 규칙(§7), clamp(§15)
+- [x] `config/macro_events/domain_basket_map.csv` — §10.2 (17행)
 - [ ] `config/macro_events/entity_alias_map.csv` — 시드: 미국 대형 정부 수주사
   - [ ] Phase 0 게이트 기준: 상위 50개 HIGH confidence 시드 (방산/항공우주 위주, verified_by/verified_at 채움)
   - [ ] v1 목표 100~200개 — 운영 검증에서 alias 매핑률 측정 후 확장 (SPEC §11.4)
