@@ -95,8 +95,12 @@ collector 진입점은 `python -m` 실행 가능하게 만든다 — Phase 0 스
 ### Collector별 (각각: 클라이언트 → 파싱 → 필터 → 저장 → 단위 테스트)
 
 - [ ] **SEC EDGAR** (§6.3~6.5) — 최우선
-  - [ ] EDGAR 조회 (UA 헤더, rate limit 준수), Form 4 / SC 13D·13G / 8-K 대상
-  - [ ] Form 4: code P만, $1M 이상, roles 필터, option/grant/automatic 제외
+  - [x] EDGAR 조회 (UA 헤더, rate limit 준수), Form 4 / SC 13D·13G / 8-K 대상
+        — `edgar_client.py`: UA 이메일 포함, 요청 간 0.15s 스로틀(≈6.6 req/s), getcurrent
+        Atom + filing 전문(.txt). 실피드 검증 2026-07-05: HTTP 전부 200, 429 없음
+  - [x] Form 4: code P만, $1M 이상, roles 필터, option/grant/automatic 제외
+        — 필터 값은 event_type_rules.yaml에서 로드. 실피드 19건 파싱 19/19 성공,
+        code P 매수 0건(주말 피드) → collected=0 정상 동작. 평일 실수집은 게이트에서 재확인
   - [ ] 13D/13G: 신규 + amendment 1.0%p 이상, form_family 정규화, 13G 일 처리 상한
   - [ ] 8-K: Item 1.01 / 조건부 8.01 (strong signal 2개+, 단독 키워드 거부)
 - [ ] **SAM.gov** (§6.1)

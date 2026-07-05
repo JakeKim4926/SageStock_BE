@@ -30,6 +30,9 @@ class Settings(BaseSettings):
     KRX_ID: str = ""
     KRX_PW: str = ""
 
+    # SEC EDGAR — 연락 이메일 포함 User-Agent 요구 (macro collector용, SPEC §4).
+    SEC_EDGAR_USER_AGENT: str = "SageStock wer1915@gmail.com"
+
     BACKEND_CORS_ORIGINS: list[str] = []
 
     model_config = SettingsConfigDict(
