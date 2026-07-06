@@ -132,8 +132,13 @@ collector 진입점은 `python -m` 실행 가능하게 만든다 — Phase 0 스
       기사 HTML(/News/*)을 Akamai가 데이터센터 IP 전체(GH 러너, 실제 Chromium 포함)와
       KR 지역에 403 차단 — RSS.ashx만 접근 가능해 실수집 불가. 러너 미등록 +
       freshness DISABLED 처리. 접근 수단 확보 시 재등록·실수집 검증 (DEBT_LOG 참조)
-- [ ] **White House** (§6.8) — collector/parser/router 분리, EO 번호 후보 추출,
+- [x] **White House** (§6.8) — collector/parser/router 분리, EO 번호 후보 추출,
       파싱 실패 시 이벤트 생성 금지 또는 PARTIAL
+      — presidential-actions WP RSS(content:encoded 전문). router=category→config
+      document_types 매핑(지명 등 제외). EO 자체 번호는 다운로드 링크(eo-NNNNN.pdf)에서
+      추출해 ACTIVE, 없으면 ACTIVE_UNLINKED — 본문 인용 번호는 후보로만 보존(§7.3).
+      필수 결손=생성 금지, 본문만 실패=PARTIAL. 실수집 2026-07-06(45일 백필): 21건 저장
+      (EO 8·Proc 9·Memo 4), EO 전건 자체 번호(14407~14414), parse FULL 21/21, 필드 위반 0
 - [ ] **Federal Register** (§6.8) — Presidential Documents, EO 번호 필드, document_number
 - [ ] **OpenDART** (§6.6) — 공급계약(500억+, 매출比 10%+), 대량보유/임원 보고(1.0%p+), EOD 1회
 

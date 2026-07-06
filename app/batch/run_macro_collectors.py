@@ -16,6 +16,7 @@ from app.batch.macro_collectors.edgar_form8k_collector import EdgarForm8KCollect
 from app.batch.macro_collectors.edgar_schedule13_collector import EdgarSchedule13Collector
 from app.batch.macro_collectors.sam_gov_collector import SamGovCollector
 from app.batch.macro_collectors.usaspending_collector import UsaSpendingCollector
+from app.batch.macro_collectors.white_house_collector import WhiteHouseCollector
 from app.core.logging import configure_logging
 
 logger = logging.getLogger(__name__)
@@ -26,6 +27,7 @@ COLLECTORS: dict[str, type[MacroCollector]] = {
     "edgar_8k": EdgarForm8KCollector,
     "sam_gov": SamGovCollector,
     "usaspending": UsaSpendingCollector,
+    "white_house": WhiteHouseCollector,
     # defense_gov(DefenseGovCollector)는 소스 보류로 미등록 — Akamai가 기사 HTML(/News/*)을
     # 데이터센터 IP 전체·KR에 403 차단(2026-07-06, freshness DISABLED). 접근 수단 확보 시
     # 재등록. 경위는 docs/DEBT_LOG.md 참조.
