@@ -127,8 +127,11 @@ collector 진입점은 `python -m` 실행 가능하게 만든다 — Phase 0 스
       mod로 이벤트 생성 경로 없음(create_new_event=false 준수), delta 체인 반영은
       Phase 2 Chain Resolve. 실수집 2026-07-05: 5건 저장(전부 L6, award_id·UEI 포함) —
       톱 American Centrifuge $900M(DOE, SAM HALEU 체인 후보)
-- [ ] **Defense.gov Contracts** (§6.7) — HTML 파싱, 항목 분리, 금액·수주사·기관 추출(3/4 필드),
-      $50M+ 또는 $7.5M+ strong keyword, modification 구분
+- [ ] **Defense.gov Contracts** (§6.7) — **보류(2026-07-06)**: collector 구현 완료(43191a2 —
+      RSS→기사 HTML 파싱, 실기사 fixture 15/15 파싱·필터 판정 7건 검증, 테스트 6개)이나
+      기사 HTML(/News/*)을 Akamai가 데이터센터 IP 전체(GH 러너, 실제 Chromium 포함)와
+      KR 지역에 403 차단 — RSS.ashx만 접근 가능해 실수집 불가. 러너 미등록 +
+      freshness DISABLED 처리. 접근 수단 확보 시 재등록·실수집 검증 (DEBT_LOG 참조)
 - [ ] **White House** (§6.8) — collector/parser/router 분리, EO 번호 후보 추출,
       파싱 실패 시 이벤트 생성 금지 또는 PARTIAL
 - [ ] **Federal Register** (§6.8) — Presidential Documents, EO 번호 필드, document_number
@@ -137,6 +140,7 @@ collector 진입점은 `python -m` 실행 가능하게 만든다 — Phase 0 스
 ### 통과 게이트
 
 - [ ] 소스 7종 각각 실데이터 수집 ≥1회 성공 (수집 건수·샘플 기록)
+      — Defense.gov는 접근 차단 보류: 실수집 대신 DISABLED 사유 기록으로 게이트 대체
 - [ ] 필터 검증: solicitation_number 단독 수집 0건 / agency 단독 수집 0건 /
       8.01 단독 키워드 수집 0건 / estimated_value 없는 SAM 이벤트는 전부 strong match
 - [ ] 모든 저장 이벤트에 publicly_observable_at + event_unique_id 존재

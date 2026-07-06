@@ -5,6 +5,16 @@
 
 ## 열린 항목
 
+### [2026-07-06] 후속분리 — Defense.gov collector 소스 보류 (접근 차단, 실수집 미검증)
+- 위치: app/batch/macro_collectors/defense_gov_collector.py / app/batch/run_macro_collectors.py(미등록)
+- 설명: collector는 구현·테스트 완료(실기사 fixture 15/15 파싱, 필터 판정 7건 검증)이나
+  기사 HTML(/News/*)을 Akamai가 데이터센터 IP 전체(GH 러너·실제 Chromium 포함)와 KR 지역에
+  403 차단해 실수집이 불가(RSS.ashx만 전역 허용). 러너 COLLECTORS 미등록 + Neon freshness
+  DISABLED 처리. Wayback 자연 캡처는 3~43h 지연으로 edge window 초과, SPN 익명 캡처는 520 실패.
+- 위험도: 중 (MEGA_CONTRACT L5 LEAD 소스 1종 공백 — SAM.gov/USAspending/8-K가 부분 대체,
+  리포트 freshness 조건은 WH FRESH만으로 충족 가능)
+- 후속: 접근 수단 확보 시(미국 residential 경유, SPN 인증 API 등) 러너 재등록 + 실수집 게이트 수행
+
 ### [2026-07-05] 후속분리 — event_type_rules.yaml 심층 스키마 미검증
 - 위치: app/services/macro_events/config_loader.py EventTypeRules (event_types·chain_promotion 필드)
 - 설명: 로더가 소스별 수집 조건(SPEC §6)·체인 승격 규칙은 dict 통과만 시킴. 최상위 구조·taxonomy·fuzzy 금지·clamp만 검증. 소비자(Phase 1~2 collector/서비스)가 없어 깊은 검증은 스펙 중복이라 의도적으로 미룸 — 오타가 Phase 1 구현 때까지 잠복 가능.
