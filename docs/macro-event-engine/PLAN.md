@@ -139,7 +139,14 @@ collector 진입점은 `python -m` 실행 가능하게 만든다 — Phase 0 스
       추출해 ACTIVE, 없으면 ACTIVE_UNLINKED — 본문 인용 번호는 후보로만 보존(§7.3).
       필수 결손=생성 금지, 본문만 실패=PARTIAL. 실수집 2026-07-06(45일 백필): 21건 저장
       (EO 8·Proc 9·Memo 4), EO 전건 자체 번호(14407~14414), parse FULL 21/21, 필드 위반 0
-- [ ] **Federal Register** (§6.8) — Presidential Documents, EO 번호 필드, document_number
+- [x] **Federal Register** (§6.8) — Presidential Documents, EO 번호 필드, document_number
+      — 공식 JSON API(documents.json, PRESDOCU + presidential_document_type 서버 필터 +
+      subtype 재확인). document_number=event_unique_id(FR 단독 chain key → ACTIVE),
+      executive_order_number/proclamation_number는 WH↔FR 체인 재료로 raw_payload 보존.
+      publication_date는 ET 자정 규약 KST, signing_date는 document_signed_at 별도 저장
+      (latency 기준 아님 §13.1). 일시적 503 관찰 → 5xx 짧은 재시도. 실수집 2026-07-06
+      (45일 백필): 19건(EO 10·Proc 9), 필드 위반 0 — WH 자체 번호와 EO 8건(14407~14414)
+      교차 확인(Phase 2 체인 검증 재료). 누적 macro_events 203건
 - [ ] **OpenDART** (§6.6) — 공급계약(500억+, 매출比 10%+), 대량보유/임원 보고(1.0%p+), EOD 1회
 
 ### 통과 게이트

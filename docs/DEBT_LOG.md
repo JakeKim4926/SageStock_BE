@@ -5,6 +5,13 @@
 
 ## 열린 항목
 
+### [2026-07-06] 검증누락 — whitehouse.gov GH 러너 접근 미확인 (로컬 검증만)
+- 위치: app/batch/macro_collectors/white_house_collector.py collect()
+- 설명: 실수집 검증은 로컬(KR)→Neon으로 수행. 운영 실행 환경인 GH Actions 러너(데이터센터 IP)에서
+  whitehouse.gov 접근 가능 여부는 미확인 — Defense.gov가 러너에서 차단됐던 전례가 있음.
+- 위험도: 낮음 (WP RSS는 일반적으로 개방적, 차단 시 freshness FAILED로 즉시 가시화됨)
+- 후속: Phase 1 게이트 또는 Phase 4 cron 배선 때 러너에서 white_house 1회 실행 확인
+
 ### [2026-07-06] 후속분리 — Defense.gov collector 소스 보류 (접근 차단, 실수집 미검증)
 - 위치: app/batch/macro_collectors/defense_gov_collector.py / app/batch/run_macro_collectors.py(미등록)
 - 설명: collector는 구현·테스트 완료(실기사 fixture 15/15 파싱, 필터 판정 7건 검증)이나
