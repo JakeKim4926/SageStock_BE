@@ -40,6 +40,23 @@ jobs:
           probe "print.aspx" -A "$UA_CHROME" "https://www.war.gov/DesktopModules/ArticleCS/Print.aspx?PortalId=1&ModuleId=1153&Article=4532515"
           probe "rss ok control" -A "$UA_CHROME" -L "https://www.war.gov/DesktopModules/ArticleCS/RSS.ashx?ContentType=400&Site=945&max=10"
           echo "== googlebot body head =="; head -c 300 /tmp/out || true
+      # 임시 프로브 2: curl/httpx JA3 차단 가설 — 실제 Chromium이면 통과하는지
+      - name: Probe with real Chromium (playwright)
+        run: |
+          pip install playwright > /dev/null && python -m playwright install chromium --with-deps > /dev/null 2>&1
+          python - <<'PYEOF'
+          from playwright.sync_api import sync_playwright
+          url = "https://www.war.gov/News/Contracts/Contract/Article/4532515/contracts-for-july-2-2026/"
+          with sync_playwright() as p:
+              browser = p.chromium.launch(headless=True)
+              page = browser.new_page()
+              resp = page.goto(url, wait_until="domcontentloaded", timeout=60000)
+              html = page.content()
+              print("status:", resp.status, "html_len:", len(html))
+              print("has body div:", '<div class="body">' in html)
+              print("has RAND:", "RAND National Defense" in html)
+              browser.close()
+          PYEOF
       - name: Run defense_gov collector
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
