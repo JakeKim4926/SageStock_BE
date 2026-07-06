@@ -1,0 +1,26 @@
+name: macro-defense-gov-verify
+
+# Defense.gov collector 실수집 검증용 임시 워크플로 (Phase 1).
+# 기사 HTML(/News/*)은 Akamai가 비미국 IP를 403 차단해 미국 러너에서만 실수집이 가능하다
+# (RSS.ashx만 전역 허용 — collector 모듈 docstring 참조). 검증 후 제거 예정,
+# 정식 cron 배선은 Phase 4 (PLAN.md).
+on:
+  workflow_dispatch: {}
+  push:
+    branches: [feature/macro-phase1-collectors]
+    paths: [".github/workflows/macro-defense-gov-verify.yml"]
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install deps
+        run: pip install uv && uv sync --frozen
+      - name: Run defense_gov collector
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: uv run python -m app.batch.run_macro_collectors defense_gov

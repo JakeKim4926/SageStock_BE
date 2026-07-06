@@ -6,9 +6,9 @@ from app.batch.macro_collectors.sam_gov_collector import (
     matches_priority_agency,
     parse_opportunity,
     passes_collect_filter,
-    title_strong_keyword_match,
 )
 from app.services.macro_events.config_loader import load_keyword_domain_map
+from app.services.macro_events.keyword_match import strong_keyword_match
 
 RULES = load_sam_rules()
 KEYWORD_MAP = load_keyword_domain_map()
@@ -61,14 +61,14 @@ def test_agency_matching_uses_department_and_subtier() -> None:
 
 
 def test_title_strong_match_phrase_and_core_keywords() -> None:
-    phrase_ok, _ = title_strong_keyword_match(
+    phrase_ok, _ = strong_keyword_match(
         "Small Modular Reactor deployment support", KEYWORD_MAP
     )
-    two_core_ok, matched = title_strong_keyword_match(
+    two_core_ok, matched = strong_keyword_match(
         "Uranium supply for reactor operations", KEYWORD_MAP
     )
-    single_core_no, _ = title_strong_keyword_match("Uranium enrichment study", KEYWORD_MAP)
-    ambiguous_no, _ = title_strong_keyword_match(
+    single_core_no, _ = strong_keyword_match("Uranium enrichment study", KEYWORD_MAP)
+    ambiguous_no, _ = strong_keyword_match(
         "Power and energy for infrastructure", KEYWORD_MAP
     )
 

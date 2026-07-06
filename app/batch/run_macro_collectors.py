@@ -11,6 +11,7 @@ import logging
 import sys
 
 from app.batch.macro_collectors.base import CollectorRunResult, MacroCollector
+from app.batch.macro_collectors.defense_gov_collector import DefenseGovCollector
 from app.batch.macro_collectors.edgar_form4_collector import EdgarForm4Collector
 from app.batch.macro_collectors.edgar_form8k_collector import EdgarForm8KCollector
 from app.batch.macro_collectors.edgar_schedule13_collector import EdgarSchedule13Collector
@@ -26,6 +27,7 @@ COLLECTORS: dict[str, type[MacroCollector]] = {
     "edgar_8k": EdgarForm8KCollector,
     "sam_gov": SamGovCollector,
     "usaspending": UsaSpendingCollector,
+    "defense_gov": DefenseGovCollector,
 }
 
 

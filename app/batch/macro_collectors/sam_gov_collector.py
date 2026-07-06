@@ -18,7 +18,6 @@ notice 갱신: 같은 noticeId 재게시=upsert 업데이트, type 전환은 새
 새 이벤트가 되고 체인 승격은 Phase 2(chain_key = agency_code + solicitation_number).
 """
 import logging
-import re
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Any
@@ -39,6 +38,7 @@ from app.services.macro_events.config_loader import (
     load_event_type_rules,
     load_keyword_domain_map,
 )
+from app.services.macro_events.keyword_match import strong_keyword_match
 from app.services.macro_events.normalize import NormalizedMacroEvent, now_kst, to_kst
 
 logger = logging.getLogger(__name__)
@@ -178,26 +178,6 @@ def matches_priority_agency(agency_path_name: str, priority_agencies: tuple[str,
     return False
 
 
-def title_strong_keyword_match(
-    title: str, keyword_map: KeywordDomainMap
-) -> tuple[bool, list[str]]:
-    """§6.1 strong 기준(title): phrase 1개, 또는 같은 domain 핵심 keyword 2개 이상.
-
-    ambiguous keyword는 핵심 keyword로 세지 않는다."""
-    lowered = title.lower()
-    for domain, rules in keyword_map.domains.items():
-        matched: list[str] = []
-        for phrase in rules.phrase_keywords:
-            if phrase.lower() in lowered:
-                return True, [phrase]
-        for keyword in rules.keywords:
-            if re.search(rf"\b{re.escape(keyword.lower())}\b", lowered):
-                matched.append(keyword)
-        if len(matched) >= 2:
-            return True, matched
-    return False, []
-
-
 def passes_collect_filter(
     opportunity: SamOpportunity,
     rules: SamCollectRules,
@@ -209,9 +189,7 @@ def passes_collect_filter(
     agency_matched = matches_priority_agency(
         opportunity.agency_path_name, rules.priority_agencies
     )
-    strong_matched, matched_keywords = title_strong_keyword_match(
-        opportunity.title, keyword_map
-    )
+    strong_matched, matched_keywords = strong_keyword_match(opportunity.title, keyword_map)
     value = opportunity.estimated_value_usd
 
     if value is None:
